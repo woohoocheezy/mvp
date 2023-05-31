@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 
+# IT ISN'T USED
 class Photos(APIView):
     def post(self, request, item_pk, pk):
         upload_url = ""

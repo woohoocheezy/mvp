@@ -95,7 +95,10 @@ class Items(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = ItemDetailSerializer(data=request.data)
+        serializer = ItemDetailSerializer(
+            data=request.data,
+            context={"request": request},
+        )
         # print(request.user.get("uid"))
         # serializer.user_id = request.user.get("uid")
 
@@ -127,7 +130,12 @@ class Items(APIView):
                     else:
                         return Response(serializer.errors)
 
-                return Response(ItemDetailSerializer(item).data)
+                return Response(
+                    ItemDetailSerializer(
+                        item,
+                        context={"request": request},
+                    ).data
+                )
         else:
             return Response(serializer.errors)
 
@@ -193,7 +201,12 @@ class ItemDetail(APIView):
             with transaction.atomic():
                 item = serializer.save()
 
-                return Response(ItemDetailSerializer(item).data)
+                return Response(
+                    ItemDetailSerializer(
+                        item,
+                        context={"request": request},
+                    ).data
+                )
         else:
             return Response(serializer.errors)
 

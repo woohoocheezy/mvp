@@ -74,7 +74,7 @@ class Item(CommonModel):
     )
 
     is_sold = models.BooleanField(default=False)
-    buy_user_id = models.TextField(default="")
+    buy_user_id = models.TextField(default="", null=True, blank=True)
 
     is_deleted = models.BooleanField(default=False)
 
