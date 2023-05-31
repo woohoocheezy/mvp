@@ -8,6 +8,35 @@ from config.settings import PAGE_SIZE, BUSINESS_SERVICE_KEY
 import requests, json
 
 
+class UserPurchaseList(APIView):
+    def get(self, request):
+        # print(request.user.get("uid"))
+
+        user_id = request.user.get("uid")
+
+        if not user_id:
+            return Response(PermissionDenied)
+
+        try:
+            page = int(request.query_params.get("page", 1))
+        except ValueError:
+            page = 1
+
+        page_size = PAGE_SIZE
+        start = (page - 1) * page_size
+        end = start + page_size
+
+        all_items = Item.objects.filter(buy_user_id=user_id, is_sold=True)[start:end]
+        serializer = ItemListSerializer(
+            all_items,
+            many=True,
+            context={"request": request},
+        )
+        # print(serializer.data)
+
+        return Response(serializer.data)
+
+
 class BusinessLicense(APIView):
     def post(self, request):
         b_no = request.data.get("b_no")

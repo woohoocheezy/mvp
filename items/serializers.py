@@ -28,6 +28,7 @@ class ItemListWishSerializer(ModelSerializer):
             "pk",
             "is_liked",
             "count_liked",
+            "is_deleted",
         )
 
     def get_photo(self, item):
@@ -67,7 +68,7 @@ class ItemListSerializer(ModelSerializer):
             "location",
             "pk",
             "is_liked",
-            "is_delete",
+            "is_deleted",
         )
 
     def get_photo(self, item):
