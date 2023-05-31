@@ -1,0 +1,107 @@
+from django.db import models
+from commons.models import CommonModel
+
+
+class Item(CommonModel):
+
+    """Item Model Definition"""
+
+    class UsedYearChoices(models.TextChoices):
+
+        """Used Year Choices"""
+
+        UNDER_1 = ("1년 이하", "1년 이하")
+        BT_1_2 = ("1년~2년", "1년~2년")
+        BT_2_3 = ("2년~3년", "2년~3년")
+        BT_3_4 = ("3년~4년", "3년~4년")
+        BT_4_4 = ("4년~5년", "4년~5년")
+        OVER_5 = ("5년 이상", "5년 이상")
+
+    class CategoryChoices(models.TextChoices):
+
+        """Category of item Choices"""
+
+        REFRIGERATOR = ("냉장고", "냉장고")
+        DISHWASHER = ("식기세척기", "식기세척기")
+        SHOWCASE = ("쇼케이스", "쇼케이스")
+        SINK = ("싱크대", "싱크대")
+        GASRANGE = ("화구/가스레인지", "화구/가스레인지")
+        KIOSK = ("포스기계/키오스크", "포스기계/키오스크")
+        TABLE = ("테이블", "테이블")
+        PACKING = ("포장기계", "포장기계")
+        AIRCON = ("에어컨", "에어컨")
+        EXTRA = ("기타", "기타")
+
+    class LocationChoices(models.TextChoices):
+
+        """Location of item choices"""
+
+        GANGNAM = ("강남구", "강남구")
+        GANGDONG = ("강동구", "강동구")
+        GANGBUK = ("강북구", "강북구")
+        GANGSEO = ("강서구", "강서구")
+        GWANAK = ("관악구", "관악구")
+        GWANGJIN = ("광진구", "광진구")
+        GURO = ("구로구", "구로구")
+        GEUMCHEON = ("금천구", "금천구")
+        NOWON = ("노원구", "노원구")
+        DOBONG = ("도봉구", "도봉구")
+        DONGDAEMUN = ("동대문구", "동대문구")
+        DONGJAK = ("동작구", "동작구")
+        MAPO = ("마포구", "마포구")
+        SEODAEMUN = ("서대문구", "서대문구")
+        SEOCHO = ("서초구", "서초구")
+        SONGDONG = ("성동구", "성동구")
+        SONDBUK = ("성북구", "성북구")
+        SONGPA = ("송파구", "송파구")
+        YANGCHEON = ("양천구", "양천구")
+        YEOUNGDUENGPO = ("영등포구", "영등포구")
+        YONGSAN = ("용산구", "용산구")
+        EUNPYEONG = ("은평구", "은평구")
+        JONGRO = ("종로구", "종로구")
+        JUNGGU = ("중구", "중구")
+        JUNGRYANG = ("중량구", "중량구")
+
+    user_id = models.TextField(default="")
+    item_name = models.CharField(
+        default="",
+        max_length=20,
+    )
+
+    # negotiable
+    is_negotiable = models.BooleanField(
+        default=False,
+    )
+
+    is_sold = models.BooleanField(default=False)
+    buy_user_id = models.TextField(default="")
+
+    is_deleted = models.BooleanField(default=False)
+
+    # price
+    price = models.PositiveIntegerField()
+
+    # used years
+    used_years = models.CharField(
+        max_length=20,
+        choices=UsedYearChoices.choices,
+    )
+
+    # manufactured date
+    manufactured_date = models.DateField(null=True, blank=True)
+
+    # warranty deadline
+    warranty_date = models.DateField(null=True, blank=True)
+
+    # description
+    description = models.TextField()
+
+    # category
+    category = models.CharField(max_length=25, choices=CategoryChoices.choices)
+
+    # about d-day
+    dday_date = models.DateField(null=True, blank=True)
+
+    location = models.CharField(
+        max_length=10, choices=LocationChoices.choices, null=True
+    )

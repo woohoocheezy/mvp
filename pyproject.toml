@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "spacejump"
+version = "0.1.0"
+description = "spacejump mvp v1"
+authors = ["woohoocheezy <woohoocheezy@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+django = "^4.2.1"
+djangorestframework = "^3.14.0"
+black = "^23.3.0"
+python-dotenv = "^1.0.0"
+mysql = "^0.0.3"
+mysqlclient = "^2.1.1"
+requests = "^2.31.0"
+firebase-admin = "^6.1.0"
+django-filter = "^23.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

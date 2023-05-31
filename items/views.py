@@ -1,0 +1,264 @@
+from django.db import transaction
+from django.db.models import Q, BooleanField, Case, When, Value
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.status import HTTP_204_NO_CONTENT
+from rest_framework.exceptions import (
+    ParseError,
+    NotFound,
+)
+
+# from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from django_filters.rest_framework import DjangoFilterBackend
+from config.settings import PAGE_SIZE
+from photos.serializers import PhotoSerializer
+from .models import Item
+from .serializers import ItemListSerializer, ItemDetailSerializer
+from .filters import ItemFilter
+
+
+class Items(APIView):
+    # permission_classes = [IsAuthenticatedOrReadOnly]
+
+    """
+    Items API URL for GET/POST request
+    example : /mvp/items
+    """
+
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = ItemFilter
+
+    def get(self, request):
+        # print(request.user)
+        """/items/?category=value
+        /items/?used_years=value
+        /items/?price_min=value&price_max=value
+        /items/?location=value
+        /items/?search=value"""
+
+        try:
+            page = int(request.query_params.get("page", 1))
+        except ValueError:
+            page = 1
+
+        page_size = PAGE_SIZE
+        start = (page - 1) * page_size
+        end = start + page_size
+        print(f"request.query_params : {request.query_params}")
+        search_query = request.query_params.get("search", "")
+        category = request.query_params.get("category")
+        used_years = request.query_params.get("used_years")
+        price = request.query_params.get("price")
+        location = request.query_params.get("location")
+        print(f"search_query : {search_query}")
+
+        query = Q()
+        if search_query:
+            query &= Q(item_name__icontains=search_query) | Q(
+                description__icontains=search_query
+            )
+        if category:
+            query &= Q(category__icontains=category)
+        if used_years:
+            query &= Q(used_years__gte=used_years)
+        if price:
+            query &= Q(price__lte=price)
+        if location:
+            query &= Q(location__icontains=location)
+
+        # if search_query:
+        #     all_items = Item.objects.filter(
+        #         Q(item_name__icontains=search_query)
+        #         | Q(item_description__icontains=search_query)
+        #     )[start:end]
+        # else:
+        #     all_items = Item.objects.all()[start:end]
+        all_items = (
+            Item.objects.filter(query)
+            .annotate(
+                is_sold_order=Case(
+                    When(is_sold=False, then=Value(0)),
+                    When(is_sold=True, then=Value(1)),
+                    output_field=BooleanField(),
+                )
+            )
+            .order_by("is_sold_order")[start:end]
+        )
+
+        serializer = ItemListSerializer(
+            all_items,
+            many=True,
+            context={"request": request},
+        )
+        # print(serializer.data)
+
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = ItemDetailSerializer(data=request.data)
+        # print(request.user.get("uid"))
+        # serializer.user_id = request.user.get("uid")
+
+        # print(request.data.get("photos[0]"))
+        # print()
+        # print(type((request.data.get("photos[1]"))))
+
+        if serializer.is_valid():
+            # user_pk = request.data.get("user_id")
+
+            # if not user_pk:
+            #     raise ParseError("user_id is requried")
+
+            with transaction.atomic():
+                serializer.pho = request.user.get("uid")
+                item = serializer.save()
+                # print(item.pk)
+                # print(request.data.get("photos"))
+
+                for photo_file in request.data.get("photos"):
+                    # print(type(photo_file), photo_file)
+
+                    serializer = PhotoSerializer(data=photo_file)
+
+                    if serializer.is_valid():
+                        photo = serializer.save(item=item)
+                        serializer = PhotoSerializer(photo)
+
+                    else:
+                        return Response(serializer.errors)
+
+                return Response(ItemDetailSerializer(item).data)
+        else:
+            return Response(serializer.errors)
+
+
+class ItemPhotos(APIView):
+    def get_object(self, pk):
+        try:
+            return Item.objects.get(pk=pk)
+        except Item.DoesNotExist:
+            raise NotFound
+
+    def post(self, request, pk):
+        item = self.get_object(pk)
+
+        serializer = PhotoSerializer(data=request.data)
+        # print(request.data)
+
+        if serializer.is_valid():
+            photo = serializer.save(item=item)
+            serializer = PhotoSerializer(photo)
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
+
+
+class ItemDetail(APIView):
+
+    """
+    Items API URL for GET/POST/PUT/DELETE request
+    example : /api/mvp/items/1
+    """
+
+    def get_object(self, pk):
+        try:
+            return Item.objects.get(pk=pk)
+
+        except Item.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, pk):
+        item = self.get_object(pk)
+        serializer = ItemDetailSerializer(
+            item,
+            context={"request": request},
+        )
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        item = self.get_object(pk)
+
+        serializer = ItemDetailSerializer(
+            item,
+            data=request.data,
+            partial=True,
+        )
+
+        if serializer.is_valid():
+            # user_pk = request.data.get("user_id")
+
+            # if not user_pk:
+            #     raise ParseError("user_id is requried")
+
+            with transaction.atomic():
+                item = serializer.save()
+
+                return Response(ItemDetailSerializer(item).data)
+        else:
+            return Response(serializer.errors)
+
+    def delete(self, request, pk):
+        room = self.get_object(pk)
+
+        room.delete()
+        return Response(HTTP_204_NO_CONTENT)
+
+
+class ItemPurchase(APIView):
+    def get_object(self, pk):
+        try:
+            return Item.objects.get(pk=pk)
+
+        except Item.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        item = self.get_object(pk)
+
+        print(request.data.get("buy_uid"))
+
+        if item.is_sold == True:
+            item.is_sold = False
+            item.buy_user_id = ""
+        else:
+            item.is_sold = True
+            item.buy_user_id = request.data.get("buy_uid")
+
+        serializer = ItemDetailSerializer(
+            item, data=request.data, context={"request": request}, partial=True
+        )
+
+        if serializer.is_valid():
+            item = serializer.save()
+            item = ItemDetailSerializer(item)
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
+
+
+class ItemDelete(APIView):
+    def get_object(self, pk):
+        try:
+            return Item.objects.get(pk=pk)
+
+        except Item.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        item = self.get_object(pk)
+
+        if item.is_deleted == True:
+            item.is_deleted = False
+        else:
+            item.is_deleted = True
+
+        serializer = ItemDetailSerializer(
+            item, data=request.data, context={"request": request}, partial=True
+        )
+
+        if serializer.is_valid():
+            item = serializer.save()
+            item = ItemDetailSerializer(item)
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
