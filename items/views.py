@@ -53,6 +53,7 @@ class Items(APIView):
         print(f"search_query : {search_query}")
 
         query = Q()
+        query &= Q(is_sold=False)
         if search_query:
             query &= Q(item_name__icontains=search_query) | Q(
                 description__icontains=search_query
@@ -73,17 +74,20 @@ class Items(APIView):
         #     )[start:end]
         # else:
         #     all_items = Item.objects.all()[start:end]
-        all_items = (
-            Item.objects.filter(query)
-            .annotate(
-                is_sold_order=Case(
-                    When(is_sold=False, then=Value(0)),
-                    When(is_sold=True, then=Value(1)),
-                    output_field=BooleanField(),
-                )
-            )
-            .order_by("is_sold_order")[start:end]
-        )
+
+        all_items = Item.objects.filter(query).order_by("-created_at")[start:end]
+
+        # all_items = (
+        #     Item.objects.filter(query)
+        #     .annotate(
+        #         is_sold_order=Case(
+        #             When(is_sold=False, then=Value(0)),
+        #             When(is_sold=True, then=Value(1)),
+        #             output_field=BooleanField(),
+        #         )
+        #     )
+        #     .order_by("is_sold_order")[start:end]
+        # )
 
         serializer = ItemListSerializer(
             all_items,
@@ -139,26 +143,28 @@ class Items(APIView):
         else:
             return Response(serializer.errors)
 
+        # class ItemPhotos(APIView):
+        #     def get_object(self, pk):
+        #         try:
+        #             return Item.objects.get(pk=pk)
+        #         except Item.DoesNotExist:
+        #             raise NotFound
 
-class ItemPhotos(APIView):
-    def get_object(self, pk):
-        try:
-            return Item.objects.get(pk=pk)
-        except Item.DoesNotExist:
-            raise NotFound
+        #     def post(self, request, pk):
+        #         print(request.data)
 
-    def post(self, request, pk):
-        item = self.get_object(pk)
+        """Doesn't work"""
+        # item = self.get_object(pk)
 
-        serializer = PhotoSerializer(data=request.data)
-        # print(request.data)
+        # serializer = PhotoSerializer(data=request.data)
+        # # print(request.data)
 
-        if serializer.is_valid():
-            photo = serializer.save(item=item)
-            serializer = PhotoSerializer(photo)
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors)
+        # if serializer.is_valid():
+        #     photo = serializer.save(item=item)
+        #     serializer = PhotoSerializer(photo)
+        #     return Response(serializer.data)
+        # else:
+        #     return Response(serializer.errors)
 
 
 class ItemDetail(APIView):

@@ -14,4 +14,3 @@ class Wishlist(CommonModel):
         Item,
         related_name="wishlists",
     )
-    # likes = models.ManyToManyField(related_name="liked_items", blank=True)

@@ -29,12 +29,13 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["5352-114-201-201-134.ngrok-free.app"]
 
 
 # Application definition
 THIRD_PARTY_APPS = [
     "rest_framework",
+    "corsheaders",
 ]
 
 CUSTOM_APPS = [
@@ -64,6 +65,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 REST_FRAMEWORK = {
@@ -74,6 +76,13 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 20,
 }
 
+CORS_ALLOWED_ORIGINS = [
+    "https://5352-114-201-201-134.ngrok-free.app",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://5352-114-201-201-134.ngrok-free.app",
+]
 
 ROOT_URLCONF = "config.urls"
 
@@ -93,13 +102,11 @@ TEMPLATES = [
     },
 ]
 
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "authentication.firebase_auth.FirebaseAuthentication",
-    ),
-}
-
 WSGI_APPLICATION = "config.wsgi.application"
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 
 # Database

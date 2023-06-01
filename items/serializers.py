@@ -1,5 +1,6 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from photos.serializers import PhotoSerializer
+from datetime import date
 from .models import Item
 from wishlists.models import Wishlist
 
@@ -13,6 +14,7 @@ class ItemListWishSerializer(ModelSerializer):
     photo = SerializerMethodField()
     is_liked = SerializerMethodField()
     count_liked = SerializerMethodField()
+    dday = SerializerMethodField()
 
     class Meta:
         model = Item
@@ -29,6 +31,7 @@ class ItemListWishSerializer(ModelSerializer):
             "is_liked",
             "count_liked",
             "is_deleted",
+            "dday",
         )
 
     def get_photo(self, item):
@@ -47,6 +50,12 @@ class ItemListWishSerializer(ModelSerializer):
         request = self.context["request"]
         return Wishlist.objects.filter(items__pk=item.pk).count()
 
+    def get_dday(self, item):
+        if item.dday_date:
+            delta = item.dday_date - date.today()
+            return delta.days
+        return None
+
 
 class ItemListSerializer(ModelSerializer):
     """Serializer Definition for Item List(store)"""
@@ -54,11 +63,12 @@ class ItemListSerializer(ModelSerializer):
     # 대표 이미지만 불러 오는 지 확인해야됨
     photo = SerializerMethodField()
     is_liked = SerializerMethodField()
+    dday = SerializerMethodField()
+    count_liked = SerializerMethodField()
 
     class Meta:
         model = Item
 
-        # 찜
         fields = (
             "item_name",
             "photo",  # 대표사진
@@ -69,6 +79,8 @@ class ItemListSerializer(ModelSerializer):
             "pk",
             "is_liked",
             "is_deleted",
+            "dday",
+            "count_liked",
         )
 
     def get_photo(self, item):
@@ -83,10 +95,22 @@ class ItemListSerializer(ModelSerializer):
             items__pk=item.pk,
         ).exists()
 
+    def get_dday(self, item):
+        if item.dday_date:
+            delta = item.dday_date - date.today()
+            return delta.days
+        return None
+
+    def get_count_liked(self, item):
+        request = self.context["request"]
+        return Wishlist.objects.filter(items__pk=item.pk).count()
+
 
 class ItemDetailSerializer(ModelSerializer):
     photos = PhotoSerializer(many=True, read_only=True)
     is_liked = SerializerMethodField()
+    count_liked = SerializerMethodField()
+    dday = SerializerMethodField()
 
     class Meta:
         model = Item
@@ -116,3 +140,13 @@ class ItemDetailSerializer(ModelSerializer):
             user_id=request.user.get("uid"),
             items__pk=item.pk,
         ).exists()
+
+    def get_dday(self, item):
+        if item.dday_date:
+            delta = item.dday_date - date.today()
+            return delta.days
+        return None
+
+    def get_count_liked(self, item):
+        request = self.context["request"]
+        return Wishlist.objects.filter(items__pk=item.pk).count()
