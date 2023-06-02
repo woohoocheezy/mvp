@@ -58,7 +58,7 @@ class Wishlists(APIView):
         serializer = WishlistSerializer(data=request.data)
 
         if serializer.is_valid():
-            wishlist = serializer.save(user_id=request.data.get("user_id"))
+            wishlist = serializer.save(user_id=request.user.get("uid"))
             serializer = WishlistSerializer(wishlist)
             return Response(serializer.data)
         else:
@@ -88,12 +88,12 @@ class WishlistDetail(APIView):
         """
 
         try:
-            return Wishlist.objects.get(user_id=request.data.get("user_id"))
+            return Wishlist.objects.get(user_id=request.user.get("uid"))
         except Wishlist.DoesNotExist:
             serializer = WishlistSerializer(data=request.data)
 
             if serializer.is_valid():
-                wishlist = serializer.save(user_id=request.data.get("user_id"))
+                wishlist = serializer.save(user_id=request.user.get("uid"))
                 serializer = WishlistSerializer(wishlist)
                 return Wishlist.objects.get(user_id=request.data.get("user_id"))
             else:
@@ -206,7 +206,7 @@ class WishlistToogle(APIView):
         Return: the serialized data of the wishlist with 'the pk & the user' which is UPDATED
         """
 
-        wishlist = self.get_wishlist(request.data.get("user_id"))
+        wishlist = self.get_wishlist(request.user.get("uid"))
         item = self.get_item(item_pk)
 
         print(request)

@@ -29,7 +29,10 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["5352-114-201-201-134.ngrok-free.app"]
+ALLOWED_HOSTS = [
+    "5352-114-201-201-134.ngrok-free.app",
+    "arctic-moon-388601.as.r.appspot.com",
+]
 
 
 # Application definition
