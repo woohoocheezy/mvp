@@ -35,7 +35,7 @@ class Wishlists(APIView):
         start = (page - 1) * page_size
         end = start + page_size
 
-        all_wishilists = Wishlist.objects.filter(user_id=request.data.get("user_id"))[
+        all_wishilists = Wishlist.objects.filter(user_id=request.user.get("uid"))[
             start:end
         ]
         serializer = WishlistSerializer(
@@ -95,7 +95,7 @@ class WishlistDetail(APIView):
             if serializer.is_valid():
                 wishlist = serializer.save(user_id=request.user.get("uid"))
                 serializer = WishlistSerializer(wishlist)
-                return Wishlist.objects.get(user_id=request.data.get("user_id"))
+                return Wishlist.objects.get(user_id=request.user.get("uid"))
             else:
                 return Response(serializer.errors)
 
