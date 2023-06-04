@@ -48,7 +48,8 @@ class Items(APIView):
         search_query = request.query_params.get("search", "")
         category = request.query_params.get("category")
         used_years = request.query_params.get("used_years")
-        price = request.query_params.get("price")
+        min_price = request.query_params.get("min_price")
+        max_price = request.query_params.get("max_price")
         location = request.query_params.get("location")
         print(f"search_query : {search_query}")
 
@@ -62,8 +63,10 @@ class Items(APIView):
             query &= Q(category__icontains=category)
         if used_years:
             query &= Q(used_years__gte=used_years)
-        if price:
-            query &= Q(price__lte=price)
+        if min_price:
+            query &= Q(price__gte=min_price)
+        if max_price:
+            query &= Q(price__lte=max_price)
         if location:
             query &= Q(location__icontains=location)
 
@@ -217,10 +220,23 @@ class ItemDetail(APIView):
             return Response(serializer.errors)
 
     def delete(self, request, pk):
-        room = self.get_object(pk)
+        item = self.get_object(pk)
 
-        room.delete()
-        return Response(HTTP_204_NO_CONTENT)
+        if item.is_deleted == True:
+            item.is_deleted = False
+        else:
+            item.is_deleted = True
+
+        serializer = ItemDetailSerializer(
+            item, data=request.data, context={"request": request}, partial=True
+        )
+
+        if serializer.is_valid():
+            item = serializer.save()
+            item = ItemDetailSerializer(item)
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
 
 
 class ItemPurchase(APIView):
