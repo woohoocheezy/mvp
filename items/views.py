@@ -54,7 +54,7 @@ class Items(APIView):
         print(f"search_query : {search_query}")
 
         query = Q()
-        query &= Q(is_sold=False)
+        query &= Q(is_sold=False, is_deleted=False)
         if search_query:
             query &= Q(item_name__icontains=search_query) | Q(
                 description__icontains=search_query
