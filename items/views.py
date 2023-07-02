@@ -36,6 +36,16 @@ class Items(APIView):
         /items/?location=value
         /items/?search=value"""
 
+        # info = f'METHOD: {request.method}\n'
+        # info += f'URL: {request.get_full_path()}\n'
+        # info += f'GET: {request.GET}\n'
+        # info += f'POST: {request.POST}\n'
+        # info += f'COOKIES: {request.COOKIES}\n'
+        # info += f'META: {request.META}\n'
+
+        # print(info)
+
+
         try:
             page = int(request.query_params.get("page", 1))
         except ValueError:
@@ -48,12 +58,14 @@ class Items(APIView):
         search_query = request.query_params.get("search", "")
         category = request.query_params.get("category")
         used_years = request.query_params.get("used_years")
-        price = request.query_params.get("price")
+        min_price = request.query_params.get("min_price")
+        max_price = request.query_params.get("max_price")
         location = request.query_params.get("location")
         print(f"search_query : {search_query}")
+        print(used_years    )
 
         query = Q()
-        query &= Q(is_sold=False)
+        query &= Q(is_sold=False, is_deleted=False)
         if search_query:
             query &= Q(item_name__icontains=search_query) | Q(
                 description__icontains=search_query
@@ -61,9 +73,11 @@ class Items(APIView):
         if category:
             query &= Q(category__icontains=category)
         if used_years:
-            query &= Q(used_years__gte=used_years)
-        if price:
-            query &= Q(price__lte=price)
+            query &= Q(used_years=used_years)
+        if min_price:
+            query &= Q(price__gte=min_price)
+        if max_price:
+            query &= Q(price__lte=max_price)
         if location:
             query &= Q(location__icontains=location)
 
@@ -75,7 +89,16 @@ class Items(APIView):
         # else:
         #     all_items = Item.objects.all()[start:end]
 
-        all_items = Item.objects.filter(query).order_by("-created_at")[start:end]
+        """test"""
+        # test1 = Item.objects.filter(query).filter("dday_date").order_by("dday_date","-created_at")
+        # test2 = Item.objects.filter(query).filter().order_by("-created_at")
+
+        # all_items = test1 + test2
+        # all_items = all_items[start:end]
+        """test end"""
+
+        # 적용되던 코드 very important
+        all_items = Item.objects.filter(query).order_by("dday_date","-created_at")[start:end] 
 
         # all_items = (
         #     Item.objects.filter(query)
@@ -217,11 +240,23 @@ class ItemDetail(APIView):
             return Response(serializer.errors)
 
     def delete(self, request, pk):
-        room = self.get_object(pk)
+        item = self.get_object(pk)
 
-        room.delete()
-        return Response(HTTP_204_NO_CONTENT)
+        if item.is_deleted == True:
+            item.is_deleted = False
+        else:
+            item.is_deleted = True
 
+        serializer = ItemDetailSerializer(
+            item, data=request.data, context={"request": request}, partial=True
+        )
+
+        if serializer.is_valid():
+            item = serializer.save()
+            item = ItemDetailSerializer(item)
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
 
 class ItemPurchase(APIView):
     def get_object(self, pk):
