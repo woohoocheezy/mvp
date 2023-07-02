@@ -1,5 +1,6 @@
 from django.db import transaction
-from django.db.models import Q, BooleanField, Case, When, Value
+from django.db.models import Q, BooleanField, Case, When, Value, IntegerField, F, DateField
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
@@ -97,8 +98,31 @@ class Items(APIView):
         # all_items = all_items[start:end]
         """test end"""
 
+        now = timezone.now().date()
+
+        # sorting items in order by created condition
+        all_items = (
+            Item.objects.filter(query)
+            .annotate(
+                order_priority=Case(
+                    When(dday_date__lt=now, then=Value(1)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+                # Use dday_date if dday_date is today or later, otherwise use now.
+                custom_date=Case(
+                    When(dday_date__gte=now, then=F("dday_date")),
+                    default=Value(now),
+                    output_field=DateField(),
+                ),
+            )
+            .order_by("order_priority", "custom_date", "-created_at")
+        )[start:end]
+
         # 적용되던 코드 very important
-        all_items = Item.objects.filter(query).order_by("dday_date","-created_at")[start:end] 
+        # all_items = Item.objects.filter(query).order_by("dday_date", "-created_at")[
+        #     start:end
+        # ] 
 
         # all_items = (
         #     Item.objects.filter(query)

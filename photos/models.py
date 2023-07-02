@@ -11,7 +11,6 @@ class Photo(CommonModel):
     item = models.ForeignKey(
         "items.Item",
         null=True,
-        blank=True,
         related_name="photos",
         on_delete=models.SET_NULL,
     )

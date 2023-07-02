@@ -88,10 +88,10 @@ class Item(CommonModel):
     )
 
     # manufactured date
-    manufactured_date = models.DateField(null=True, blank=True)
+    manufactured_date = models.DateField()
 
     # warranty deadline
-    warranty_date = models.DateField(null=True, blank=True)
+    warranty_date = models.DateField()
 
     # description
     description = models.TextField()
@@ -100,7 +100,7 @@ class Item(CommonModel):
     category = models.CharField(max_length=25, choices=CategoryChoices.choices)
 
     # about d-day
-    dday_date = models.DateField(null=True, blank=True)
+    dday_date = models.DateField()
 
     location = models.CharField(
         max_length=10, choices=LocationChoices.choices, null=True
