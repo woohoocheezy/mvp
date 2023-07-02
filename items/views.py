@@ -36,6 +36,16 @@ class Items(APIView):
         /items/?location=value
         /items/?search=value"""
 
+        # info = f'METHOD: {request.method}\n'
+        # info += f'URL: {request.get_full_path()}\n'
+        # info += f'GET: {request.GET}\n'
+        # info += f'POST: {request.POST}\n'
+        # info += f'COOKIES: {request.COOKIES}\n'
+        # info += f'META: {request.META}\n'
+
+        # print(info)
+
+
         try:
             page = int(request.query_params.get("page", 1))
         except ValueError:
@@ -52,6 +62,7 @@ class Items(APIView):
         max_price = request.query_params.get("max_price")
         location = request.query_params.get("location")
         print(f"search_query : {search_query}")
+        print(used_years    )
 
         query = Q()
         query &= Q(is_sold=False, is_deleted=False)
@@ -62,7 +73,7 @@ class Items(APIView):
         if category:
             query &= Q(category__icontains=category)
         if used_years:
-            query &= Q(used_years__gte=used_years)
+            query &= Q(used_years=used_years)
         if min_price:
             query &= Q(price__gte=min_price)
         if max_price:
@@ -78,7 +89,16 @@ class Items(APIView):
         # else:
         #     all_items = Item.objects.all()[start:end]
 
-        all_items = Item.objects.filter(query).order_by("-created_at")[start:end]
+        """test"""
+        # test1 = Item.objects.filter(query).filter("dday_date").order_by("dday_date","-created_at")
+        # test2 = Item.objects.filter(query).filter().order_by("-created_at")
+
+        # all_items = test1 + test2
+        # all_items = all_items[start:end]
+        """test end"""
+
+        # 적용되던 코드 very important
+        all_items = Item.objects.filter(query).order_by("dday_date","-created_at")[start:end] 
 
         # all_items = (
         #     Item.objects.filter(query)
@@ -237,7 +257,6 @@ class ItemDetail(APIView):
             return Response(serializer.data)
         else:
             return Response(serializer.errors)
-
 
 class ItemPurchase(APIView):
     def get_object(self, pk):

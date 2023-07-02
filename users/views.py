@@ -26,7 +26,7 @@ class UserPurchaseList(APIView):
         start = (page - 1) * page_size
         end = start + page_size
 
-        all_items = Item.objects.filter(buy_user_id=user_id, is_sold=True)[start:end]
+        all_items = Item.objects.filter(buy_user_id=user_id, is_sold=True, is_deleted=False)[start:end]
         serializer = ItemListSerializer(
             all_items,
             many=True,
@@ -53,12 +53,22 @@ class BusinessLicense(APIView):
                     service_key = f"{BUSINESS_SERVICE_KEY}"
 
                     # Set the data as a dictionary
+                    # data = {
+                    #     "businesses": [
+                    #         {
+                    #             "b_no": "1222936420",
+                    #             "start_dt": "20110901",
+                    #             "p_nm": "이정희",
+                    #         }
+                    #     ]
+                    # }
+
                     data = {
                         "businesses": [
                             {
-                                "b_no": "1222936420",
-                                "start_dt": "20110901",
-                                "p_nm": "이정희",
+                                "b_no": b_no,
+                                "start_dt": start_dt,
+                                "p_nm": p_nm,
                             }
                         ]
                     }
@@ -134,7 +144,7 @@ class UserSellingList(APIView):
         start = (page - 1) * page_size
         end = start + page_size
 
-        all_items = Item.objects.filter(user_id=user_id, is_sold=False)[start:end]
+        all_items = Item.objects.filter(user_id=user_id, is_sold=False, is_deleted=False)[start:end]
         serializer = ItemListSerializer(
             all_items,
             many=True,
@@ -176,7 +186,7 @@ class UserSoldList(APIView):
         start = (page - 1) * page_size
         end = start + page_size
 
-        all_items = Item.objects.filter(user_id=user_id, is_sold=True)[start:end]
+        all_items = Item.objects.filter(user_id=user_id, is_sold=True, is_deleted=False)[start:end]
         serializer = ItemListSerializer(
             all_items,
             many=True,

@@ -166,8 +166,4 @@ cython_debug/
 todo.md
 get_firebase_token.py
 uploadtest.png
-mysql-apt-config_0.8.17-1_all.deb
-.gcloudignore
-app.yaml
 spacebar-83b06-firebase-adminsdk-t48ml-6d3af34ab7.json
-.gcloudignore

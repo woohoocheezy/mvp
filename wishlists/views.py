@@ -143,7 +143,7 @@ class WishlistDetail(APIView):
     #     Return: the serialized data of the wishlist with 'the pk & the user' which is UPDATED
     #     """
 
-    #     wishlist = self.get_object(pk, request.data.get("user_id"))
+    #     wishlist = self.get_object(pk, request.data.get("user_id"))  
     #     serializer = WishlistSerializer(wishlist, data=request.data, partial=True)
 
     #     if serializer.is_valid():
