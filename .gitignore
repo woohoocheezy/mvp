@@ -164,14 +164,10 @@ cython_debug/
 .DS_Store
 .vscode
 todo.md
-spacebar-83b06-firebase-adminsdk-t48ml-5d47594f54.json
 get_firebase_token.py
 uploadtest.png
 mysql-apt-config_0.8.17-1_all.deb
-spacebar-83b06-firebase-adminsdk-t48ml-be5bfd7728_v2.json
-v1spacebar-83b06-firebase-adminsdk-t48ml-5d47594f54.json
 .gcloudignore
-.app.yaml
-spacebar-83b06-firebase-adminsdk-t48ml-5d47594f54_v1.json
-spacebar-83b06-firebase-adminsdk-t48ml-312c89008c.json
+app.yaml
+spacebar-83b06-firebase-adminsdk-t48ml-6d3af34ab7.json
 .gcloudignore
