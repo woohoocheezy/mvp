@@ -25,13 +25,14 @@ class GetUploadURL(APIView):
 
         # Extract the upload URL from response body
         response_data = url_request.json()
+        print(response_data)
         upload_url = response_data["result"]["uploadURL"]
 
         # Upload the file to the URL using requests
         with uploaded_file.open("rb") as f:
             file = {"file": (uploaded_file.name, f)}
             response = requests.post(upload_url, files=file)
-
+        
         uploaded_url = response.json()["result"]["variants"][0]
         # print(response.text)
 

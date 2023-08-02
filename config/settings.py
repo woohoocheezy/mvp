@@ -29,7 +29,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['34.130.129.142', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['34.130.129.142', 'localhost', '127.0.0.1', '0.0.0.0']
 
 
 # Application definition
@@ -43,6 +43,7 @@ CUSTOM_APPS = [
     "photos.apps.PhotosConfig",
     "items.apps.ItemsConfig",
     "wishlists.apps.WishlistsConfig",
+    "stats.apps.StatsConfig",
     "authentication.apps.AuthenticationConfig",
 ]
 
