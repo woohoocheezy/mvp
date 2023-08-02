@@ -28,11 +28,10 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['34.130.129.142', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ["34.64.38.85", "localhost", "127.0.0.1"]
 # ALLOWED_HOSTS = ["0.0.0.0"]
-
 
 
 # Application definition
@@ -46,6 +45,7 @@ CUSTOM_APPS = [
     "photos.apps.PhotosConfig",
     "items.apps.ItemsConfig",
     "wishlists.apps.WishlistsConfig",
+    "stats.apps.StatsConfig",
     "authentication.apps.AuthenticationConfig",
     "django_celery_results",
     "push_notification",
@@ -127,9 +127,9 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD"),
         "HOST": os.getenv("DB_HOST"),
         "PORT": os.getenv("DB_PORT"),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'init_command': 'SET character_set_connection=utf8mb4,collation_connection=utf8mb4_unicode_ci',
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            "init_command": "SET character_set_connection=utf8mb4,collation_connection=utf8mb4_unicode_ci,sql_mode='STRICT_TRANS_TABLES'",
         },
     }
 }
@@ -169,7 +169,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 
 # Default primary key field type

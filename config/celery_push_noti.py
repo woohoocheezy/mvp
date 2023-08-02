@@ -12,11 +12,11 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 # app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 app.autodiscover_tasks()
 
+app.conf.broker_connection_retry_on_startup = True
 
 app.conf.beat_schedule = {
     "send_push_notifications": {
         "task": "push_notification.tasks.send_push_notifications",
-        # "schedule": crontab(minute=0, hour=14),  # Execute every day at 2 PM
-        "schedule": crontab(minute=0, hour=11),  # Execute every day at 2 PM
+        "schedule": crontab(minute=0, hour=11),  # Execute every day at 11 am
     }
 }
