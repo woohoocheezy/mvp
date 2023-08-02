@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 import firebase_admin
 from firebase_admin import credentials
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,7 +30,13 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+<<<<<<< HEAD
 ALLOWED_HOSTS = ['34.130.129.142', 'localhost', '127.0.0.1', '0.0.0.0']
+=======
+ALLOWED_HOSTS = ['34.130.129.142', 'localhost', '127.0.0.1']
+# ALLOWED_HOSTS = ["0.0.0.0"]
+
+>>>>>>> 13258b2f654d3aa9620847cebef84fd0d5d46cec
 
 
 # Application definition
@@ -45,6 +52,8 @@ CUSTOM_APPS = [
     "wishlists.apps.WishlistsConfig",
     "stats.apps.StatsConfig",
     "authentication.apps.AuthenticationConfig",
+    "django_celery_results",
+    "push_notification",
 ]
 
 SYSTEM_APPS = [
@@ -179,11 +188,19 @@ CF_TOKEN = os.getenv("CF_TOKEN")
 
 # Firebase authentication sdk
 firebase_credentials_json = os.getenv("FIREBASE_CREDENTIALS_JSON")
+firebase_credentials_json = os.path.join(BASE_DIR, firebase_credentials_json)
 cred = credentials.Certificate(firebase_credentials_json)
 firebase_admin.initialize_app(cred)
+
+# Firebase server key
+firebase_server_api_key = os.getenv("FIREBASE_SERVER_API_KEY")
 
 # pagination
 PAGE_SIZE = 20
 
 # BUSSINESS_SERVICE_KEY
 BUSINESS_SERVICE_KEY = os.getenv("BUSINESS_SERVICE_KEY")
+
+# celery settings
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = "django-db"
