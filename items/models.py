@@ -21,13 +21,14 @@ class Item(CommonModel):
 
         """Category of item Choices"""
 
-        REFRIGERATOR = ("냉장고", "냉장고")
-        DISHWASHER = ("식기세척기", "식기세척기")
+        FURNITURE = ("가구", "가구")
+        COFFEEMACHINE = ("커피머신", "커피머신")
+        ICEMAKER = ("제빙기", "제빙기")
+        REFRIGERATOR = ("냉장고/냉동고", "냉장고/냉동고")
+        DISHWASHER = ("세척기", "세척기")
         SHOWCASE = ("쇼케이스", "쇼케이스")
-        SINK = ("싱크대", "싱크대")
-        GASRANGE = ("화구/가스레인지", "화구/가스레인지")
-        KIOSK = ("포스기계/키오스크", "포스기계/키오스크")
-        TABLE = ("테이블", "테이블")
+        SINK = ("싱크대/작업대", "싱크대/작업대")
+        GASRANGE = ("가스레인지/인덕션", "가스레인지/인덕션")
         PACKING = ("포장기계", "포장기계")
         AIRCON = ("에어컨", "에어컨")
         EXTRA = ("기타", "기타")

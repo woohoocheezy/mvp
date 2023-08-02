@@ -1,5 +1,15 @@
 from django.db import transaction
-from django.db.models import Q, BooleanField, Case, When, Value
+from django.db.models import (
+    Q,
+    BooleanField,
+    Case,
+    When,
+    Value,
+    IntegerField,
+    F,
+    DateField,
+)
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
@@ -36,6 +46,15 @@ class Items(APIView):
         /items/?location=value
         /items/?search=value"""
 
+        # info = f'METHOD: {request.method}\n'
+        # info += f'URL: {request.get_full_path()}\n'
+        # info += f'GET: {request.GET}\n'
+        # info += f'POST: {request.POST}\n'
+        # info += f'COOKIES: {request.COOKIES}\n'
+        # info += f'META: {request.META}\n'
+
+        # print(info)
+
         try:
             page = int(request.query_params.get("page", 1))
         except ValueError:
@@ -44,14 +63,18 @@ class Items(APIView):
         page_size = PAGE_SIZE
         start = (page - 1) * page_size
         end = start + page_size
-        print(f"request.query_params : {request.query_params}")
+        # print(f"request.query_params : {request.query_params}")
         search_query = request.query_params.get("search", "")
-        category = request.query_params.get("category")
-        used_years = request.query_params.get("used_years")
+        # category = request.query_params.get("category")
+        categories = request.query_params.getlist("category")
+        # used_years = request.query_params.get("used_years")
+        used_years = request.query_params.getlist("used_years")
         min_price = request.query_params.get("min_price")
         max_price = request.query_params.get("max_price")
-        location = request.query_params.get("location")
-        print(f"search_query : {search_query}")
+        # location = request.query_params.get("location")
+        locations = request.query_params.getlist("location")
+        # print(f"search_query : {search_query}")
+        # print(used_years)
 
         query = Q()
         query &= Q(is_sold=False, is_deleted=False)
@@ -59,16 +82,20 @@ class Items(APIView):
             query &= Q(item_name__icontains=search_query) | Q(
                 description__icontains=search_query
             )
-        if category:
-            query &= Q(category__icontains=category)
+        # if category:
+        #     query &= Q(category__icontains=category)
+        if categories:
+            query &= Q(category__in=categories)
         if used_years:
-            query &= Q(used_years__gte=used_years)
+            query &= Q(used_years__in=used_years)
         if min_price:
             query &= Q(price__gte=min_price)
         if max_price:
             query &= Q(price__lte=max_price)
-        if location:
-            query &= Q(location__icontains=location)
+        # if location:
+        #     query &= Q(location__icontains=location)
+        if locations:
+            query &= Q(location__in=locations)
 
         # if search_query:
         #     all_items = Item.objects.filter(
@@ -78,7 +105,39 @@ class Items(APIView):
         # else:
         #     all_items = Item.objects.all()[start:end]
 
-        all_items = Item.objects.filter(query).order_by("-created_at")[start:end]
+        """test"""
+        # test1 = Item.objects.filter(query).filter("dday_date").order_by("dday_date","-created_at")
+        # test2 = Item.objects.filter(query).filter().order_by("-created_at")
+
+        # all_items = test1 + test2
+        # all_items = all_items[start:end]
+        """test end"""
+
+        now = timezone.now().date()
+
+        # sorting items in order by created condition
+        all_items = (
+            Item.objects.filter(query)
+            .annotate(
+                order_priority=Case(
+                    When(dday_date__lte=now, then=Value(1)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+                # Use dday_date if dday_date is today or later, otherwise use now.
+                custom_date=Case(
+                    When(dday_date__gt=now, then=F("dday_date")),
+                    default=Value(now),
+                    output_field=DateField(),
+                ),
+            )
+            .order_by("order_priority", "custom_date", "-created_at")
+        )[start:end]
+
+        # 적용되던 코드 very important
+        # all_items = Item.objects.filter(query).order_by("dday_date", "-created_at")[
+        #     start:end
+        # ]
 
         # all_items = (
         #     Item.objects.filter(query)
@@ -98,6 +157,38 @@ class Items(APIView):
             context={"request": request},
         )
         # print(serializer.data)
+
+        from stats.models import (
+            SearchStats,
+            SearchCategory,
+            SearchLocation,
+            SearchUsedYears,
+        )
+
+        # 1. Create the SearchStats instance and set the user_id.
+        # print(request.data.get("buy_uid"))
+        # search_stat = SearchStats(user_id=request.data.get("buy_uid"))
+        search_stat = SearchStats(user_id="qwer")
+        search_stat.save()
+
+        # 2. Handle many-to-many relationships.
+        # Categories
+        for category in categories:
+            obj, _ = SearchCategory.objects.get_or_create(category=category)
+            search_stat.searched_categories.add(obj)
+
+        # Used Years
+        for used_year in used_years:
+            obj, _ = SearchUsedYears.objects.get_or_create(used_years=used_year)
+            search_stat.searched_used_years.add(obj)
+
+        # Locations
+        for location in locations:
+            obj, _ = SearchLocation.objects.get_or_create(location=location)
+            search_stat.searched_locations.add(obj)
+
+        # 3. Save the SearchStats instance.
+        search_stat.save()
 
         return Response(serializer.data)
 
@@ -195,9 +286,13 @@ class ItemDetail(APIView):
     def put(self, request, pk):
         item = self.get_object(pk)
 
+        data = request.data.copy()  # Create a mutable copy of request data
+        if "dday_date" in data:
+            data.pop("dday_date")  # Remove 'd-day' from the data if it exists
+
         serializer = ItemDetailSerializer(
             item,
-            data=request.data,
+            data=data,
             partial=True,
         )
 
@@ -219,24 +314,24 @@ class ItemDetail(APIView):
         else:
             return Response(serializer.errors)
 
-    def delete(self, request, pk):
-        item = self.get_object(pk)
+        def delete(self, request, pk):
+            item = self.get_object(pk)
 
-        if item.is_deleted == True:
-            item.is_deleted = False
-        else:
-            item.is_deleted = True
+            if item.is_deleted == True:
+                item.is_deleted = False
+            else:
+                item.is_deleted = True
 
-        serializer = ItemDetailSerializer(
-            item, data=request.data, context={"request": request}, partial=True
-        )
+            serializer = ItemDetailSerializer(
+                item, data=request.data, context={"request": request}, partial=True
+            )
 
-        if serializer.is_valid():
-            item = serializer.save()
-            item = ItemDetailSerializer(item)
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors)
+            if serializer.is_valid():
+                item = serializer.save()
+                item = ItemDetailSerializer(item)
+                return Response(serializer.data)
+            else:
+                return Response(serializer.errors)
 
 
 class ItemPurchase(APIView):
