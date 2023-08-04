@@ -1,3 +1,4 @@
+#! /home/woohoocheezy/.cache/pypoetry/virtualenvs/spacejump-736Ebgb5-py3.10/bin/python3
 import os
 import sys
 from django import setup
@@ -16,6 +17,11 @@ from stats.models import ItemStatsDaily
 from datetime import datetime, timedelta
 from django.db.models import Q
 
+# import logging
+
+# log_filename = "/home/woohoocheezy/sosang-mvp/stats/analyze_daily_data.log"
+# logging.basicConfig(filename=log_filename, level=logging.INFO)
+
 
 def analyze_daily_data():
     help = 'Fetch data from "items" model and process & analyze it daily'
@@ -31,23 +37,27 @@ def analyze_daily_data():
         Q(created_at__range=(yesterday_start, yesterday_end))
     )
 
-    daily_items_count = len(yesterday_records)
-    print(f"daily_items_count: {daily_items_count}")
-    nego_selected_items_count = analyze_nego_count(yesterday_records)
-    print(f"nego_selected_items_count: {nego_selected_items_count}")
-    selected_days_to_sell_avg = analyze_dday_avg(yesterday_records)
-    print(f"selected_days_to_sell_avg: {selected_days_to_sell_avg}")
-    # popular_category = analyze_category_data(yesterday_records)
-    # print(f"popular_category: {popular_category}")
+    if len(yesterday_records) != 0:
+        daily_items_count = len(yesterday_records)
+        # print(f"daily_items_count: {daily_items_count}")
+        nego_selected_items_count = analyze_nego_count(yesterday_records)
+        # print(f"nego_selected_items_count: {nego_selected_items_count}")
+        selected_days_to_sell_avg = analyze_dday_avg(yesterday_records)
+        # print(f"selected_days_to_sell_avg: {selected_days_to_sell_avg}")
+        # popular_category = analyze_category_data(yesterday_records)
+        # print(f"popular_category: {popular_category}")
 
-    # ItemStatsDaily(
-    #     total_daily_items=daily_items_count,
-    #     nego_selected_items=nego_selected_items_count,
-    #     avg_selected_days_to_sell=selected_days_to_sell_avg,
-    #     popular_category =
-    # )
+        itemstats = ItemStatsDaily(
+            total_daily_items=daily_items_count,
+            nego_selected_items=nego_selected_items_count,
+            avg_selected_days_to_sell=selected_days_to_sell_avg,
+        )
+        itemstats.save()
 
-    # analyze_dday_avg_check(yesterday_records)
+        print(f"Script executed at {datetime.now()}")
+        # analyze_dday_avg_check(yesterday_records)
+    else:
+        print(f"Script executed failed [no yesterday records] at {datetime.now()}")
 
 
 def analyze_dday_avg_check(records):
@@ -59,8 +69,8 @@ def analyze_dday_avg_check(records):
     annotated_records = records.annotate(days_to_dday=F("dday_date") - today)
 
     # annotated_records의 객체별로 days_to_dday를 출력합니다.
-    for record in annotated_records:
-        print(f"[{record.id}] Days to D-Day: {record.days_to_dday}")
+    # for record in annotated_records:
+    #     print(f"[{record.id}] Days to D-Day: {record.days_to_dday}")
 
     # days_to_dday의 평균을 계산합니다.
     average_dday = annotated_records.aggregate(Avg("days_to_dday"))
@@ -135,7 +145,7 @@ if __name__ == "__main__":
     from django.utils import timezone
 
     items = Item.objects.all()
-    print(items[49].created_at)
+    print(items[46].created_at)
     # 현재 시간을 얻습니다.
     now = timezone.now()
 
@@ -147,14 +157,15 @@ if __name__ == "__main__":
     items = Item.objects.all()
 
     # items[49]의 created_at을 어제날짜로 변경합니다.
-    item_to_update = items[49]
+    item_to_update = items[46]
     item_to_update.created_at = yesterday
 
     # 변경 사항을 저장합니다.
     item_to_update.save()
 
     # 변경된 created_at을 출력합니다.
-    print(items[49].created_at)
+    print(items[46].created_at)
     """
+    print()
 
     analyze_daily_data()

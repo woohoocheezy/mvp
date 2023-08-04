@@ -16,7 +16,6 @@ class GetUploadURL(APIView):
             return Response({"error": "No file provided"}, status=400)
 
         uploaded_file = request.FILES["file"]
-        print(uploaded_file)
 
         # Call cloudflare API for getting the upload URL
         url = f"https://api.cloudflare.com/client/v4/accounts/{settings.CF_ID}/images/v2/direct_upload"
@@ -28,15 +27,12 @@ class GetUploadURL(APIView):
         response_data = url_request.json()
         upload_url = response_data["result"]["uploadURL"]
 
-        print(upload_url)
-
         # Upload the file to the URL using requests
         with uploaded_file.open("rb") as f:
             file = {"file": (uploaded_file.name, f)}
             response = requests.post(upload_url, files=file)
 
         uploaded_url = response.json()["result"]["variants"][0]
-        print(response.text)
 
         return Response(
             {"upload_url": uploaded_url},

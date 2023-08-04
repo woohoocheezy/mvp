@@ -89,7 +89,7 @@ class Item(CommonModel):
     )
 
     # manufactured date
-    manufactured_date = models.DateField(null=True, blank=True)
+    manufactured_date = models.DateField()
 
     # warranty deadline
     warranty_date = models.DateField(null=True, blank=True)

@@ -27,7 +27,7 @@ class ItemListWishSerializer(ModelSerializer):
             "is_sold",
             "price",
             "location",
-            "pk",
+            "id",
             "is_liked",
             "count_liked",
             "is_deleted",
@@ -76,11 +76,12 @@ class ItemListSerializer(ModelSerializer):
             "is_sold",
             "price",
             "location",
-            "pk",
+            "id",
             "is_liked",
             "is_deleted",
             "dday",
             "count_liked",
+            "user_id",
         )
 
     def get_photo(self, item):
@@ -116,23 +117,6 @@ class ItemDetailSerializer(ModelSerializer):
         model = Item
 
         fields = "__all__"
-
-        # fields = (
-        #     "item_name",
-        #     "user_ID",
-        #     # "photos",
-        #     "is_negotiable",
-        #     "is_liked",
-        #     "is_sold",
-        #     "price",
-        #     "used_years",
-        #     "manufactured_date",
-        #     "warranty_date",
-        #     "description",
-        #     "category",
-        #     "dday_date",
-        #     "location",
-        # )
 
     def get_is_liked(self, item):
         request = self.context["request"]

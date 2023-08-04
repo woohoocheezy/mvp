@@ -32,8 +32,6 @@ def send_push_notifications():
     for chat in chats:
         chat_data = chat.to_dict()
 
-        from django.utils import timezone
-
         userID = chat_data["userId"][0]
 
         productID = chat_data["productId"]

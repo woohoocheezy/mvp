@@ -190,6 +190,39 @@ class Items(APIView):
         # 3. Save the SearchStats instance.
         search_stat.save()
 
+        if search_query or categories or used_years or locations:
+            from stats.models import (
+                SearchStats,
+                SearchCategory,
+                SearchLocation,
+                SearchUsedYears,
+            )
+
+            # 1. Create the SearchStats instance and set the user_id.
+            search_stat = SearchStats(user_id=request.user["user_id"])
+            search_stat.save()
+
+            # 2. Handle many-to-many relationships.
+            # Categories
+            for category in categories:
+                obj, _ = SearchCategory.objects.get_or_create(category=category)
+                search_stat.searched_categories.add(obj)
+
+            # Used Years
+            for used_year in used_years:
+                obj, _ = SearchUsedYears.objects.get_or_create(used_years=used_year)
+                search_stat.searched_used_years.add(obj)
+
+            # Locations
+            for location in locations:
+                obj, _ = SearchLocation.objects.get_or_create(location=location)
+                search_stat.searched_locations.add(obj)
+
+            search_stat.searched_keyword = search_query
+
+            # 3. Save the SearchStats instance.
+            search_stat.save()
+
         return Response(serializer.data)
 
     def post(self, request):

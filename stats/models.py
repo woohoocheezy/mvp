@@ -43,7 +43,7 @@ class SearchStats(CommonModel):
     searched_categories = models.ManyToManyField(SearchCategory, blank=True)
     searched_locations = models.ManyToManyField(SearchLocation, blank=True)
     searched_used_years = models.ManyToManyField(SearchUsedYears, blank=True)
-    most_searched_keyword = models.CharField(max_length=255, null=True, blank=True)
+    searched_keyword = models.CharField(max_length=255, null=True, blank=True)
 
     # def __str__(self):
     #     return f"{self.created_at}: {', '.join(str(category) for category in self.searched_categories.all())}, {', '.join(str(location) for location in self.searched_locations.all())}, {', '.join(str(used_years) for used_years in self.searched_used_years.all())}, {self.most_searched_keyword}"

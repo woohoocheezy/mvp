@@ -126,6 +126,10 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD"),
         "HOST": os.getenv("DB_HOST"),
         "PORT": os.getenv("DB_PORT"),
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            "init_command": "SET character_set_connection=utf8mb4,collation_connection=utf8mb4_unicode_ci,sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
 
@@ -164,7 +168,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 
 # Default primary key field type

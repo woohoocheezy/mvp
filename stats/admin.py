@@ -24,42 +24,44 @@ class ItemStatsDailyAdmin(admin.ModelAdmin):
     )
 
 
-# @admin.register(SearchCategory)
-# class SearchCategoryAdmin(admin.ModelAdmin):
-#     list_display = (
-#         "id",
-#         "category",
-#     )
+"""
+@admin.register(SearchCategory)
+class SearchCategoryAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "category",
+    )
 
 
-# @admin.register(SearchLocation)
-# class SearchLocationAdmin(admin.ModelAdmin):
-#     list_display = (
-#         "id",
-#         "location",
-#     )
+@admin.register(SearchLocation)
+class SearchLocationAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "location",
+    )
 
 
-# @admin.register(SearchUsedYears)
-# class SearchUsedYearsAdmin(admin.ModelAdmin):
-#     list_display = (
-#         "id",
-#         "used_years",
-#     )
+@admin.register(SearchUsedYears)
+class SearchUsedYearsAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "used_years",
+    )
+"""
 
 
 @admin.register(SearchStats)
-class SearchStatsDailyAdmin(admin.ModelAdmin):
+class SearchStatsAdmin(admin.ModelAdmin):
     list_display = (
         "created_at",
         "user_id",
         "get_searched_categories",
         "get_searched_locations",
         "get_searched_used_years",
-        "most_searched_keyword",
+        "searched_keyword",
     )
     list_filter = ("created_at",)
-    search_fields = ("user_id", "most_searched_keyword")
+    search_fields = ("user_id", "searched_keyword")
 
     def get_searched_categories(self, obj):
         return ", ".join(
