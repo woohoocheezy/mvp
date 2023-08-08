@@ -46,6 +46,8 @@ class Items(APIView):
         /items/?location=value
         /items/?search=value"""
 
+        print(request)
+
         # info = f'METHOD: {request.method}\n'
         # info += f'URL: {request.get_full_path()}\n'
         # info += f'GET: {request.GET}\n'
@@ -382,10 +384,10 @@ class ItemPurchase(APIView):
 
         if item.is_sold == True:
             item.is_sold = False
-            item.buy_user_id = ""
+            item.buy_user_uuid = ""
         else:
             item.is_sold = True
-            item.buy_user_id = request.data.get("buy_uid")
+            item.buy_user_uuid = request.data.get("buy_uid")
 
         serializer = ItemDetailSerializer(
             item, data=request.data, context={"request": request}, partial=True

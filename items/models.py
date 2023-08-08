@@ -63,7 +63,7 @@ class Item(CommonModel):
         JUNGGU = ("중구", "중구")
         JUNGRYANG = ("중량구", "중량구")
 
-    user_id = models.TextField(default="")
+    user_uuid = models.TextField(default="")
     item_name = models.CharField(
         default="",
         max_length=20,
@@ -75,7 +75,7 @@ class Item(CommonModel):
     )
 
     is_sold = models.BooleanField(default=False)
-    buy_user_id = models.TextField(default="", null=True, blank=True)
+    buy_user_uuid = models.TextField(default="", null=True, blank=True)
 
     is_deleted = models.BooleanField(default=False)
 

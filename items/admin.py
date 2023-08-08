@@ -10,7 +10,7 @@ class ItemAdmin(admin.ModelAdmin):
         "price",
         "is_sold",
         "is_deleted",
-        "user_id",
+        "user_uuid",
         "used_years",
         "category",
         "description",

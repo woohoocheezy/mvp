@@ -91,8 +91,10 @@ class ItemListSerializer(ModelSerializer):
 
     def get_is_liked(self, item):
         request = self.context["request"]
+        # print(request.user.custom_user)
         return Wishlist.objects.filter(
-            user_id=request.user.get("user_id"),
+            # user_id=request.user.get("user_id"),
+            user_id=request.user.custom_user.user_uuid,
             items__pk=item.pk,
         ).exists()
 

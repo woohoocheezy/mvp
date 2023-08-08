@@ -14,7 +14,8 @@ from dotenv import load_dotenv
 from pathlib import Path
 import firebase_admin
 from firebase_admin import credentials
-from celery.schedules import crontab
+from datetime import timedelta
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -36,6 +37,7 @@ ALLOWED_HOSTS = []
 # Application definition
 THIRD_PARTY_APPS = [
     "rest_framework",
+    "rest_framework_simplejwt",
     "corsheaders",
 ]
 
@@ -46,6 +48,7 @@ CUSTOM_APPS = [
     "wishlists.apps.WishlistsConfig",
     "stats.apps.StatsConfig",
     "authentication.apps.AuthenticationConfig",
+    "users.apps.UsersConfig",
     "django_celery_results",
     "push_notification",
 ]
@@ -74,19 +77,33 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "authentication.firebase_auth.FirebaseAuthentication",
+        # "authentication.firebase_auth.FirebaseAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    "SIMPLE_JWT": {  # JWT settings
+        "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+        "TOKEN_SERIALIZER_CLASS": "authentication.views.CustomTokenObtainPairSerializer",
+        "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+        "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+        "ROTATE_REFRESH_TOKENS": True,
+        "BLACKLIST_AFTER_ROTATION": True,
+        "ALGORITHM": "HS256",
+        "SIGNING_KEY": SECRET_KEY,
+        "VERFIYING_KEY": None,
+        "AUDIENCE": None,
+        "ISSUER": None,
+        "AUTH_HEADER_TYPES": ("Bearer",),
+        "USER_ID_FIELD": "phone_number",
+        "USER_ID_CLAIM": "user_phone_number",
+        "TOKEN_TYPE_CLAIM": "token_type",
+    },
 }
 
-CORS_ALLOWED_ORIGINS = [
-    "https://5352-114-201-201-134.ngrok-free.app",
-]
+CORS_ALLOWED_ORIGINS = []
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://5352-114-201-201-134.ngrok-free.app",
-]
+CSRF_TRUSTED_ORIGINS = []
 
 ROOT_URLCONF = "config.urls"
 
@@ -110,6 +127,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
+    "authentication.backends.CustomUserAuthenticationBackend",
 ]
 
 
@@ -199,3 +217,7 @@ BUSINESS_SERVICE_KEY = os.getenv("BUSINESS_SERVICE_KEY")
 # celery settings
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_RESULT_BACKEND = "django-db"
+
+# Custom User Model
+# AUTH_USER_MODEL = "users.CustomUser"
+AUTH_USER_MODEL = "auth.User"
