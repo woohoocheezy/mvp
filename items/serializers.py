@@ -42,12 +42,11 @@ class ItemListWishSerializer(ModelSerializer):
     def get_is_liked(self, item):
         request = self.context["request"]
         return Wishlist.objects.filter(
-            user_id=request.user.get("user_id"),
+            user=request.user.custom_user,
             items__pk=item.pk,
         ).exists()
 
     def get_count_liked(self, item):
-        request = self.context["request"]
         return Wishlist.objects.filter(items__pk=item.pk).count()
 
     def get_dday(self, item):
@@ -93,7 +92,7 @@ class ItemListSerializer(ModelSerializer):
         request = self.context["request"]
 
         return Wishlist.objects.filter(
-            user_id=request.user.custom_user.user_uuid,
+            user=request.user.custom_user,
             items__pk=item.pk,
         ).exists()
 
@@ -104,7 +103,6 @@ class ItemListSerializer(ModelSerializer):
         return None
 
     def get_count_liked(self, item):
-        request = self.context["request"]
         return Wishlist.objects.filter(items__pk=item.pk).count()
 
 
@@ -123,7 +121,7 @@ class ItemDetailSerializer(ModelSerializer):
     def get_is_liked(self, item):
         request = self.context["request"]
         return Wishlist.objects.filter(
-            user_id=request.user.custom_user.user_uuid,
+            user=request.user.custom_user,
             items__pk=item.pk,
         ).exists()
 
@@ -134,5 +132,4 @@ class ItemDetailSerializer(ModelSerializer):
         return None
 
     def get_count_liked(self, item):
-        request = self.context["request"]
         return Wishlist.objects.filter(items__pk=item.pk).count()

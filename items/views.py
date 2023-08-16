@@ -174,7 +174,11 @@ class Items(APIView):
         # 1. Create the SearchStats instance and set the user_id.
         # print(request.data.get("buy_uid"))
         # search_stat = SearchStats(user_id=request.data.get("buy_uid"))
-        search_stat = SearchStats(user_id="qwer")
+        if request.user.is_authenticated:
+            user_uuid = request.user.custom_user.user_uuid
+        else:
+            user_uuid = "-1"
+        search_stat = SearchStats(user_id=user_uuid)
         search_stat.save()
 
         # 2. Handle many-to-many relationships.
@@ -205,7 +209,7 @@ class Items(APIView):
             )
 
             # 1. Create the SearchStats instance and set the user_id.
-            search_stat = SearchStats(user_id=request.user["user_id"])
+            search_stat = SearchStats(user_id=requser_uuid)
             search_stat.save()
 
             # 2. Handle many-to-many relationships.

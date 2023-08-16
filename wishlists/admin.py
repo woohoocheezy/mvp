@@ -1,9 +1,12 @@
 from django.contrib import admin
-from .models import Wishlist
+from .models import Wishlist, WishlistItem
 
 
 @admin.register(Wishlist)
 class WishlistAdmin(admin.ModelAdmin):
-    class Meta:
-        verbose_name = "찜하기"
-        verbose_name_plural = "찜하기"
+    list_display = ("id", "user")
+
+
+@admin.register(WishlistItem)
+class WishlistItemAdmin(admin.ModelAdmin):
+    list_display = ("id", "wishlist", "item", "added_at")

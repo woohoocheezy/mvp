@@ -1,7 +1,6 @@
 from django.db import models
 from commons.models import CommonModel
 from items.models import Item
-from django.utils import timezone
 
 
 class Wishlist(CommonModel):

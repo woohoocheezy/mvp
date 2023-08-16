@@ -1,10 +1,10 @@
-from rest_framework import status
+# from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.status import HTTP_200_OK
-from .models import Wishlist
+from .models import Wishlist, WishlistItem
 from .serializers import WishlistSerializer
 from items.models import Item
 from config.settings import PAGE_SIZE
@@ -34,7 +34,7 @@ class Wishlists(APIView):
         start = (page - 1) * page_size
         end = start + page_size
 
-        all_wishilists = Wishlist.objects.filter(user_id=request.user.get("uid"))[
+        all_wishilists = Wishlist.objects.filter(user=request.user.custom_user)[
             start:end
         ]
         serializer = WishlistSerializer(
@@ -57,7 +57,7 @@ class Wishlists(APIView):
         serializer = WishlistSerializer(data=request.data)
 
         if serializer.is_valid():
-            wishlist = serializer.save(user_id=request.user.get("uid"))
+            wishlist = serializer.save(user=request.user.custom_user)
             serializer = WishlistSerializer(wishlist)
             return Response(serializer.data)
         else:
@@ -86,16 +86,20 @@ class WishlistDetail(APIView):
         Return: the wishlist object of a request.user with the wishlist's pk, or NotFound
         """
 
+        custom_user = request.user.custom_user
+
         try:
-            return Wishlist.objects.get(user_id=request.user.get("uid"))
+            return Wishlist.objects.get(user=custom_user)
         except Wishlist.DoesNotExist:
+            request.data["user"] = custom_user.user_uuid
             serializer = WishlistSerializer(data=request.data)
 
             if serializer.is_valid():
-                wishlist = serializer.save(user_id=request.user.get("uid"))
+                wishlist = serializer.save()
                 serializer = WishlistSerializer(wishlist)
-                return Wishlist.objects.get(user_id=request.user.get("uid"))
+                return Wishlist.objects.get(user=custom_user)
             else:
+                print(serializer.errors)
                 return Response(serializer.errors)
 
     def get(self, request):
@@ -154,7 +158,7 @@ class WishlistDetail(APIView):
     #         return Response(serializer.errors)
 
 
-class WishlistToogle(APIView):
+class WishlistToggle(APIView):
 
     """The API view for adding/removing a item to/from the wishlist
        Handling requests for 'PUT /wishlists/{ID of a wishlist}/items/{ID of a item}'
@@ -168,7 +172,7 @@ class WishlistToogle(APIView):
     permission_classes = [IsAuthenticated]
     # pagination_class = PageNumberPagination
 
-    def get_wishlist(self, user_id):
+    def get_wishlist(self, request):
         """returning the object of a wishlist making a query by checking pk and user
 
         Keyword arguments:
@@ -177,10 +181,21 @@ class WishlistToogle(APIView):
         Return: the Wishlist object of a request.user with the wishlist's pk, or NotFound
         """
 
+        custom_user = request.user.custom_user
+
         try:
-            return Wishlist.objects.get(user_id=user_id)
+            return Wishlist.objects.get(user=custom_user)
         except Wishlist.DoesNotExist:
-            raise NotFound
+            request.data["user"] = custom_user.user_uuid
+            serializer = WishlistSerializer(data=request.data)
+
+            if serializer.is_valid():
+                wishlist = serializer.save()
+                serializer = WishlistSerializer(wishlist)
+                return Wishlist.objects.get(user=custom_user)
+            else:
+                print(serializer.errors)
+                return Response(serializer.errors)
 
     def get_item(self, pk):
         """returning the object of a item making a query by checking pk
@@ -205,14 +220,32 @@ class WishlistToogle(APIView):
         Return: the serialized data of the wishlist with 'the pk & the user' which is UPDATED
         """
 
-        wishlist = self.get_wishlist(request.user.get("uid"))
+        wishlist = self.get_wishlist(request)
         item = self.get_item(item_pk)
 
         print(request)
+        print(wishlist, item)
+        print(item.user, type(item.user))
+
+        if item.user == request.user.custom_user:
+            raise PermissionDenied(detail="User는 본인의 상품에 대해서 좋아요를 누를 수 없음")
+
+        if item.is_deleted is True:
+            raise PermissionDenied(detail="해당 상품은 삭제되어 좋아요를 누를 수 없음")
+
+        if item.is_sold is True:
+            raise PermissionDenied(detail="해당 상품은 판매되어 좋아요를 누를 수 없음")
 
         if wishlist.items.filter(pk=item_pk).exists():
+            wishlist_item = WishlistItem.objects.get(
+                wishlist=wishlist,
+                item=item,
+            )
+            wishlist_item.delete()
             wishlist.items.remove(item)
         else:
+            wishlist_item = WishlistItem(wishlist=wishlist, item=item)
+            wishlist_item.save()
             wishlist.items.add(item)
 
         return Response(status=HTTP_200_OK)
