@@ -79,6 +79,7 @@ class Item(CommonModel):
         null=True,
         blank=True,
     )
+    buy_user_uuid = models.TextField(default="")
 
     # negotiable
     is_negotiable = models.BooleanField(

@@ -42,10 +42,6 @@ def migrate_user_data():
         if "name" not in data.keys():
             continue
 
-        # if data["name"] != "이용원", "":
-        #     continue
-        # print(data["name"], data["nickName"])
-
         if data["name"] is None:
             data["name"] = ""
 
@@ -82,22 +78,44 @@ def migrate_user_data():
 
         user_obj.save()
 
-        # change the user_id from Items with provied "userId" of firebase
-        # print(data["userId"])
         items = Item.objects.filter(user_uuid=data["userId"])
 
         if len(items) > 0:
             items.update(user_uuid=user_obj.user_uuid)
 
-        # print(items, f"len: {len(items)}")
-
-        # print("----------------------------------------------")
-
 
 def migrate_wishlist_data():
-    db = firestore.client()
+    from users.models import CustomUser
+    from wishlists.models import Wishlist
 
-    users_ref = db.collection("user")
+    custom_user_nicknames = CustomUser.objects.all().values_list("nick_name", flat=True)
+    wishlists = Wishlist.objects.all().values_list("user_id_firebase", flat=True)
+    print(wishlists)
+    # print(custom_user_nicknames)
+
+    # for nickname in custom_user_nicknames:
+    #     print(nickname)
+
+    firebase_db = firestore.client()
+
+    users_ref = firebase_db.collection("user")
     users = users_ref.get()
 
     for user in users:
+        data = user.to_dict()
+
+        if data["nickName"] not in custom_user_nicknames:
+            # print(f"[ERROR] there's no nickname with {data['nickName']}")
+            continue
+
+        print(data["userId"])
+
+        if data["userId"] in wishlists:
+            print("!@!@")
+            custom_user = CustomUser.objects.get(nick_name=data["nickName"])
+            Wishlist.objects.filter(user_id_firebase=data["userId"]).update(
+                user=custom_user
+            )
+
+    # for wishlist in wishlists:
+    # print(wishlist.user_id)
