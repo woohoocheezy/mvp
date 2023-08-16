@@ -81,7 +81,7 @@ class ItemListSerializer(ModelSerializer):
             "is_deleted",
             "dday",
             "count_liked",
-            "user_id",
+            "user",
         )
 
     def get_photo(self, item):
@@ -91,9 +91,8 @@ class ItemListSerializer(ModelSerializer):
 
     def get_is_liked(self, item):
         request = self.context["request"]
-        # print(request.user.custom_user)
+
         return Wishlist.objects.filter(
-            # user_id=request.user.get("user_id"),
             user_id=request.user.custom_user.user_uuid,
             items__pk=item.pk,
         ).exists()
@@ -119,11 +118,12 @@ class ItemDetailSerializer(ModelSerializer):
         model = Item
 
         fields = "__all__"
+        read_only_fields = ["user"]
 
     def get_is_liked(self, item):
         request = self.context["request"]
         return Wishlist.objects.filter(
-            user_id=request.user.get("uid"),
+            user_id=request.user.custom_user.user_uuid,
             items__pk=item.pk,
         ).exists()
 

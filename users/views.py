@@ -2,6 +2,7 @@ from django.contrib.auth.models import AnonymousUser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import ParseError, PermissionDenied
+from rest_framework.permissions import IsAuthenticated
 from items.models import Item
 from items.serializers import ItemListSerializer
 from config.settings import PAGE_SIZE, BUSINESS_SERVICE_KEY
@@ -9,14 +10,9 @@ import requests, json
 
 
 class UserPurchaseList(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        # print(request.user.get("uid"))
-
-        user_id = request.user.get("uid")
-
-        if not user_id:
-            return Response(PermissionDenied)
-
         try:
             page = int(request.query_params.get("page", 1))
         except ValueError:
@@ -27,19 +23,20 @@ class UserPurchaseList(APIView):
         end = start + page_size
 
         all_items = Item.objects.filter(
-            buy_user_id=user_id, is_sold=True, is_deleted=False
+            buy_user=request.user.custom_user, is_sold=True, is_deleted=False
         )[start:end]
         serializer = ItemListSerializer(
             all_items,
             many=True,
             context={"request": request},
         )
-        # print(serializer.data)
 
         return Response(serializer.data)
 
 
 class BusinessLicense(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         b_no = request.data.get("b_no")
         start_dt = request.data.get("start_dt")
@@ -53,17 +50,6 @@ class BusinessLicense(APIView):
 
                     # Set the service key (replace XXXXXXX with your actual API key)
                     service_key = f"{BUSINESS_SERVICE_KEY}"
-
-                    # Set the data as a dictionary
-                    # data = {
-                    #     "businesses": [
-                    #         {
-                    #             "b_no": "1222936420",
-                    #             "start_dt": "20110901",
-                    #             "p_nm": "이정희",
-                    #         }
-                    #     ]
-                    # }
 
                     data = {
                         "businesses": [
@@ -129,14 +115,9 @@ class UserSellingList(APIView):
     Return: return_description
     """
 
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        # print(request.user.get("uid"))
-
-        user_id = request.user.get("uid")
-
-        if not user_id:
-            return Response(PermissionDenied)
-
         try:
             page = int(request.query_params.get("page", 1))
         except ValueError:
@@ -147,7 +128,9 @@ class UserSellingList(APIView):
         end = start + page_size
 
         all_items = Item.objects.filter(
-            user_id=user_id, is_sold=False, is_deleted=False
+            user=request.user.custom_user,
+            is_sold=False,
+            is_deleted=False,
         )[start:end]
 
         serializer = ItemListSerializer(
@@ -155,7 +138,6 @@ class UserSellingList(APIView):
             many=True,
             context={"request": request},
         )
-        # print(serializer.data)
 
         return Response(serializer.data)
 
@@ -169,19 +151,9 @@ class UserSoldList(APIView):
     Return: return_description
     """
 
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        # print(request.user.get("uid"))
-        # print(request.user, type(request.user))
-
-        if type(request.user) == AnonymousUser:
-            return Response(PermissionDenied)
-
-        user_id = request.user.get("uid")
-        # print(user_id)
-
-        if not user_id:
-            return Response(PermissionDenied)
-
         try:
             page = int(request.query_params.get("page", 1))
         except ValueError:
@@ -192,7 +164,7 @@ class UserSoldList(APIView):
         end = start + page_size
 
         all_items = Item.objects.filter(
-            user_id=user_id, is_sold=True, is_deleted=False
+            user=request.user.custom_user, is_sold=True, is_deleted=False
         )[start:end]
 
         serializer = ItemListSerializer(

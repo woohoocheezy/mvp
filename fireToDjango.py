@@ -5,6 +5,7 @@ import secrets
 from django.contrib.auth.models import User
 from firebase_admin import firestore
 from users.models import CustomUser
+from items.models import Item
 
 
 def random_string_generator(length=10):
@@ -29,13 +30,11 @@ def create_random_user():
     return auth_user
 
 
-def migrate_data():
+def migrate_user_data():
     db = firestore.client()
 
     users_ref = db.collection("user")
     users = users_ref.get()
-
-    count = 0
 
     for user in users:
         data = user.to_dict()
@@ -45,7 +44,7 @@ def migrate_data():
 
         # if data["name"] != "이용원", "":
         #     continue
-        print(data["name"])
+        # print(data["name"], data["nickName"])
 
         if data["name"] is None:
             data["name"] = ""
@@ -83,5 +82,22 @@ def migrate_data():
 
         user_obj.save()
 
-        print(count)
-        count += 1
+        # change the user_id from Items with provied "userId" of firebase
+        # print(data["userId"])
+        items = Item.objects.filter(user_uuid=data["userId"])
+
+        if len(items) > 0:
+            items.update(user_uuid=user_obj.user_uuid)
+
+        # print(items, f"len: {len(items)}")
+
+        # print("----------------------------------------------")
+
+
+def migrate_wishlist_data():
+    db = firestore.client()
+
+    users_ref = db.collection("user")
+    users = users_ref.get()
+
+    for user in users:

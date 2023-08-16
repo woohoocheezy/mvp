@@ -63,10 +63,21 @@ class Item(CommonModel):
         JUNGGU = ("중구", "중구")
         JUNGRYANG = ("중량구", "중량구")
 
-    user_uuid = models.TextField(default="")
     item_name = models.CharField(
         default="",
         max_length=20,
+    )
+    user = models.ForeignKey(
+        "users.CustomUser",
+        on_delete=models.CASCADE,
+        related_name="uploaded_items",
+    )
+    buy_user = models.ForeignKey(
+        "users.CustomUser",
+        on_delete=models.SET_NULL,
+        related_name="purchased_items",
+        null=True,
+        blank=True,
     )
 
     # negotiable
@@ -75,7 +86,6 @@ class Item(CommonModel):
     )
 
     is_sold = models.BooleanField(default=False)
-    buy_user_uuid = models.TextField(default="", null=True, blank=True)
 
     is_deleted = models.BooleanField(default=False)
 

@@ -30,7 +30,7 @@ class CustomUser(models.Model):
         auto_now=True,
     )
     fcm_token = models.TextField(null=True, blank=True)
-    nick_name = models.CharField(max_length=10)
+    nick_name = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=13)
     birth_date = models.DateField()
     sector = models.CharField(max_length=13)

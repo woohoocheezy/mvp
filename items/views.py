@@ -16,9 +16,12 @@ from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.exceptions import (
     ParseError,
     NotFound,
+    PermissionDenied,
 )
-
-# from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from django_filters.rest_framework import DjangoFilterBackend
 from config.settings import PAGE_SIZE
 from photos.serializers import PhotoSerializer
@@ -37,6 +40,7 @@ class Items(APIView):
 
     filter_backends = (DjangoFilterBackend,)
     filterset_class = ItemFilter
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
         # print(request.user)
@@ -122,7 +126,7 @@ class Items(APIView):
             Item.objects.filter(query)
             .annotate(
                 order_priority=Case(
-                    When(dday_date__lte=now, then=Value(1)),
+                    When(dday_date__lt=now, then=Value(1)),
                     default=Value(0),
                     output_field=IntegerField(),
                 ),
@@ -228,10 +232,14 @@ class Items(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        # request.data["user"] = request.user.custom_user
+        # print(request.user.custom_user)
+        # print(request.data["user"])
         serializer = ItemDetailSerializer(
             data=request.data,
             context={"request": request},
         )
+
         # print(request.user.get("uid"))
         # serializer.user_id = request.user.get("uid")
 
@@ -246,9 +254,13 @@ class Items(APIView):
             #     raise ParseError("user_id is requried")
 
             with transaction.atomic():
-                serializer.pho = request.user.get("uid")
-                item = serializer.save()
-                # print(item.pk)
+                # serializer.user = request.user.custom_user
+                # print(request.user.custom_user.user_uuid)
+                print(serializer)
+                # item = serializer.save()
+                # item = serializer.save(user_id=request.user.custom_user.user_uuid)
+                item = serializer.save(user=request.user.custom_user)
+                print(item.pk)
                 # print(request.data.get("photos"))
 
                 for photo_file in request.data.get("photos"):
@@ -269,31 +281,9 @@ class Items(APIView):
                         context={"request": request},
                     ).data
                 )
+
         else:
             return Response(serializer.errors)
-
-        # class ItemPhotos(APIView):
-        #     def get_object(self, pk):
-        #         try:
-        #             return Item.objects.get(pk=pk)
-        #         except Item.DoesNotExist:
-        #             raise NotFound
-
-        #     def post(self, request, pk):
-        #         print(request.data)
-
-        """Doesn't work"""
-        # item = self.get_object(pk)
-
-        # serializer = PhotoSerializer(data=request.data)
-        # # print(request.data)
-
-        # if serializer.is_valid():
-        #     photo = serializer.save(item=item)
-        #     serializer = PhotoSerializer(photo)
-        #     return Response(serializer.data)
-        # else:
-        #     return Response(serializer.errors)
 
 
 class ItemDetail(APIView):
@@ -302,6 +292,8 @@ class ItemDetail(APIView):
     Items API URL for GET/POST/PUT/DELETE request
     example : /api/mvp/items/1
     """
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_object(self, pk):
         try:
@@ -321,6 +313,9 @@ class ItemDetail(APIView):
     def put(self, request, pk):
         item = self.get_object(pk)
 
+        if item.user != request.user.custom_user:
+            raise PermissionDenied(detail="해당 User는 수정 권한이 없음")
+
         data = request.data.copy()  # Create a mutable copy of request data
         if "dday_date" in data:
             data.pop("dday_date")  # Remove 'd-day' from the data if it exists
@@ -332,11 +327,6 @@ class ItemDetail(APIView):
         )
 
         if serializer.is_valid():
-            # user_pk = request.data.get("user_id")
-
-            # if not user_pk:
-            #     raise ParseError("user_id is requried")
-
             with transaction.atomic():
                 item = serializer.save()
 
@@ -370,6 +360,10 @@ class ItemDetail(APIView):
 
 
 class ItemPurchase(APIView):
+    """A view for changing 'is_sold' status"""
+
+    permission_classes = [IsAuthenticated]
+
     def get_object(self, pk):
         try:
             return Item.objects.get(pk=pk)
@@ -380,14 +374,17 @@ class ItemPurchase(APIView):
     def put(self, request, pk):
         item = self.get_object(pk)
 
-        print(request.data.get("buy_uid"))
+        if item.user != request.user.custom_user:
+            raise PermissionDenied(detail="해당 User는 수정 권한이 없음")
 
-        if item.is_sold == True:
+        if item.is_sold is True:
             item.is_sold = False
-            item.buy_user_uuid = ""
+            item.buy_user = request.data.get("buy_user")
+
         else:
+            if request.data.get("buy_user") is None:
+                raise ParseError(detail="buy_user가 누락됨")
             item.is_sold = True
-            item.buy_user_uuid = request.data.get("buy_uid")
 
         serializer = ItemDetailSerializer(
             item, data=request.data, context={"request": request}, partial=True
@@ -402,6 +399,8 @@ class ItemPurchase(APIView):
 
 
 class ItemDelete(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get_object(self, pk):
         try:
             return Item.objects.get(pk=pk)
@@ -412,7 +411,10 @@ class ItemDelete(APIView):
     def put(self, request, pk):
         item = self.get_object(pk)
 
-        if item.is_deleted == True:
+        if item.user != request.user.custom_user:
+            raise PermissionDenied(detail="해당 User는 수정 권한이 없음")
+
+        if item.is_deleted is True:
             item.is_deleted = False
         else:
             item.is_deleted = True

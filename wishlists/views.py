@@ -1,8 +1,7 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-# from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
 from rest_framework.status import HTTP_200_OK
 from .models import Wishlist
@@ -143,7 +142,7 @@ class WishlistDetail(APIView):
     #     Return: the serialized data of the wishlist with 'the pk & the user' which is UPDATED
     #     """
 
-    #     wishlist = self.get_object(pk, request.data.get("user_id"))  
+    #     wishlist = self.get_object(pk, request.data.get("user_id"))
     #     serializer = WishlistSerializer(wishlist, data=request.data, partial=True)
 
     #     if serializer.is_valid():
@@ -166,7 +165,7 @@ class WishlistToogle(APIView):
     Return: None
     """
 
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     # pagination_class = PageNumberPagination
 
     def get_wishlist(self, user_id):

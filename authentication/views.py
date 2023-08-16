@@ -34,19 +34,19 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # save the valid user
         self.user = user
 
-        print(phone_number)
+        # print(phone_number)
         # print(self.user.name)
 
         # print("phone number:", self.user.phone_number)
 
         # get a JWT token
         refresh = self.get_token(self.user)
-        print(phone_number)
+        # print(phone_number)
         data = {
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         }
-        print(phone_number)
+        # print(phone_number)
 
         return data
 
