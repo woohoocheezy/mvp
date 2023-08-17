@@ -31,7 +31,6 @@ from .filters import ItemFilter
 
 
 class Items(APIView):
-    # permission_classes = [IsAuthenticatedOrReadOnly]
 
     """
     Items API URL for GET/POST request
@@ -40,7 +39,8 @@ class Items(APIView):
 
     filter_backends = (DjangoFilterBackend,)
     filterset_class = ItemFilter
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    # permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         # print(request.user)
@@ -175,7 +175,7 @@ class Items(APIView):
         # print(request.data.get("buy_uid"))
         # search_stat = SearchStats(user_id=request.data.get("buy_uid"))
         if request.user.is_authenticated:
-            user_uuid = request.user.custom_user.user_uuid
+            user_uuid = request.user.user_uuid
         else:
             user_uuid = "-1"
         search_stat = SearchStats(user_id=user_uuid)
@@ -209,7 +209,7 @@ class Items(APIView):
             )
 
             # 1. Create the SearchStats instance and set the user_id.
-            search_stat = SearchStats(user_id=requser_uuid)
+            search_stat = SearchStats(user_id=request.user.user_uuid)
             search_stat.save()
 
             # 2. Handle many-to-many relationships.
@@ -263,7 +263,7 @@ class Items(APIView):
                 print(serializer)
                 # item = serializer.save()
                 # item = serializer.save(user_id=request.user.custom_user.user_uuid)
-                item = serializer.save(user=request.user.custom_user)
+                item = serializer.save(user=request.user)
                 print(item.pk)
                 # print(request.data.get("photos"))
 
@@ -297,7 +297,8 @@ class ItemDetail(APIView):
     example : /api/mvp/items/1
     """
 
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    # permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticated]
 
     def get_object(self, pk):
         try:
@@ -317,7 +318,7 @@ class ItemDetail(APIView):
     def put(self, request, pk):
         item = self.get_object(pk)
 
-        if item.user != request.user.custom_user:
+        if item.user != request.user:
             raise PermissionDenied(detail="해당 User는 수정 권한이 없음")
 
         data = request.data.copy()  # Create a mutable copy of request data
@@ -378,7 +379,7 @@ class ItemPurchase(APIView):
     def put(self, request, pk):
         item = self.get_object(pk)
 
-        if item.user != request.user.custom_user:
+        if item.user != request.user:
             raise PermissionDenied(detail="해당 User는 수정 권한이 없음")
 
         if item.is_sold is True:
@@ -415,7 +416,7 @@ class ItemDelete(APIView):
     def put(self, request, pk):
         item = self.get_object(pk)
 
-        if item.user != request.user.custom_user:
+        if item.user != request.user:
             raise PermissionDenied(detail="해당 User는 수정 권한이 없음")
 
         if item.is_deleted is True:

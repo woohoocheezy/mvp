@@ -34,9 +34,7 @@ class Wishlists(APIView):
         start = (page - 1) * page_size
         end = start + page_size
 
-        all_wishilists = Wishlist.objects.filter(user=request.user.custom_user)[
-            start:end
-        ]
+        all_wishilists = Wishlist.objects.filter(user=request.user)[start:end]
         serializer = WishlistSerializer(
             all_wishilists,
             many=True,
@@ -86,7 +84,7 @@ class WishlistDetail(APIView):
         Return: the wishlist object of a request.user with the wishlist's pk, or NotFound
         """
 
-        custom_user = request.user.custom_user
+        custom_user = request.user
 
         try:
             return Wishlist.objects.get(user=custom_user)
@@ -181,7 +179,7 @@ class WishlistToggle(APIView):
         Return: the Wishlist object of a request.user with the wishlist's pk, or NotFound
         """
 
-        custom_user = request.user.custom_user
+        custom_user = request.user
 
         try:
             return Wishlist.objects.get(user=custom_user)
@@ -227,7 +225,7 @@ class WishlistToggle(APIView):
         print(wishlist, item)
         print(item.user, type(item.user))
 
-        if item.user == request.user.custom_user:
+        if item.user == request.user:
             raise PermissionDenied(detail="User는 본인의 상품에 대해서 좋아요를 누를 수 없음")
 
         if item.is_deleted is True:

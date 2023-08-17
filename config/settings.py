@@ -78,27 +78,29 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         # "authentication.firebase_auth.FirebaseAuthentication",
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        # "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "authentication.authentication.CustomJWTAuthentication",
     ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
-    "SIMPLE_JWT": {  # JWT settings
-        "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
-        "TOKEN_SERIALIZER_CLASS": "authentication.views.CustomTokenObtainPairSerializer",
-        "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
-        "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-        "ROTATE_REFRESH_TOKENS": True,
-        "BLACKLIST_AFTER_ROTATION": True,
-        "ALGORITHM": "HS256",
-        "SIGNING_KEY": SECRET_KEY,
-        "VERFIYING_KEY": None,
-        "AUDIENCE": None,
-        "ISSUER": None,
-        "AUTH_HEADER_TYPES": ("Bearer",),
-        "USER_ID_FIELD": "phone_number",
-        "USER_ID_CLAIM": "user_phone_number",
-        "TOKEN_TYPE_CLAIM": "token_type",
-    },
+}
+
+SIMPLE_JWT = {  # JWT settings
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_SERIALIZER_CLASS": "authentication.views.CustomTokenObtainPairSerializer",
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "VERFIYING_KEY": None,
+    "AUDIENCE": None,
+    "ISSUER": None,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "phone_number",
+    "USER_ID_CLAIM": "user_phone_number",
+    "TOKEN_TYPE_CLAIM": "token_type",
 }
 
 CORS_ALLOWED_ORIGINS = []

@@ -42,7 +42,7 @@ class ItemListWishSerializer(ModelSerializer):
     def get_is_liked(self, item):
         request = self.context["request"]
         return Wishlist.objects.filter(
-            user=request.user.custom_user,
+            user=request.user,
             items__pk=item.pk,
         ).exists()
 
@@ -92,7 +92,7 @@ class ItemListSerializer(ModelSerializer):
         request = self.context["request"]
 
         return Wishlist.objects.filter(
-            user=request.user.custom_user,
+            user=request.user,
             items__pk=item.pk,
         ).exists()
 
@@ -120,8 +120,9 @@ class ItemDetailSerializer(ModelSerializer):
 
     def get_is_liked(self, item):
         request = self.context["request"]
+        print(request.user, type(request.user))
         return Wishlist.objects.filter(
-            user=request.user.custom_user,
+            user=request.user,
             items__pk=item.pk,
         ).exists()
 

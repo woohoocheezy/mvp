@@ -13,7 +13,10 @@ class CustomUser(models.Model):
         LOCAL = ("local", "Local Login")
 
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="custom_user"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="custom_user",
+        null=True,
     )
 
     username = None
@@ -61,3 +64,7 @@ class CustomUser(models.Model):
 
     def __str__(self):
         return self.nick_name
+
+    @property
+    def is_authenticated(self):
+        return self.user.is_authenticated

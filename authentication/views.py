@@ -1,5 +1,11 @@
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import (
+    TokenObtainPairSerializer,
+    TokenRefreshSerializer,
+)
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 from rest_framework import exceptions, serializers
 from users.models import CustomUser
 
@@ -12,7 +18,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         self.fields.pop("username", None)
         self.fields.pop("password", None)
 
-    # @staticmethod
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        token["user_phone_number"] = user.phone_number
+        return token
+
     def validate(self, attrs):
         # retrieve 'user_id' provided by client
         phone_number = attrs.get("phone_number")
@@ -24,8 +36,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         try:
             # retrieve the user with provided 'user_id'
-            customUser = CustomUser.objects.get(phone_number=phone_number)
-            user = customUser.user
+            user = CustomUser.objects.get(phone_number=phone_number)
+
         except CustomUser.DoesNotExist:
             raise exceptions.AuthenticationFailed(
                 {"Authentication Failed": "No user found with provied phone_number."}
@@ -45,6 +57,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data = {
             "refresh": str(refresh),
             "access": str(refresh.access_token),
+            "user_phone_number": self.user.phone_number,
         }
         # print(phone_number)
 
@@ -53,3 +66,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+
+class CustomTokenRefreshSerializer(TokenRefreshSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        refresh = self.get_token(self.user)
+        data["access"] = str(refresh.access_token)
+        return data
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    serializer_class = CustomTokenRefreshSerializer

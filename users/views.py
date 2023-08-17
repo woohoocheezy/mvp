@@ -23,7 +23,7 @@ class UserPurchaseList(APIView):
         end = start + page_size
 
         all_items = Item.objects.filter(
-            buy_user=request.user.custom_user, is_sold=True, is_deleted=False
+            buy_user=request.user, is_sold=True, is_deleted=False
         )[start:end]
         serializer = ItemListSerializer(
             all_items,
@@ -128,7 +128,7 @@ class UserSellingList(APIView):
         end = start + page_size
 
         all_items = Item.objects.filter(
-            user=request.user.custom_user,
+            user=request.user,
             is_sold=False,
             is_deleted=False,
         )[start:end]
@@ -164,7 +164,7 @@ class UserSoldList(APIView):
         end = start + page_size
 
         all_items = Item.objects.filter(
-            user=request.user.custom_user, is_sold=True, is_deleted=False
+            user=request.user, is_sold=True, is_deleted=False
         )[start:end]
 
         serializer = ItemListSerializer(
