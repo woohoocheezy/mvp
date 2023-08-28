@@ -1,13 +1,13 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from photos.serializers import PhotoSerializer
 from datetime import date
-from .models import FixedPriceItem, AuctionItem
-from wishlists.models import TempWishlist
+from .models import FixedPriceItem, AuctionItem, Item
+from wishlists.models import Wishlist
 
 # from photos.serailizer import PhotoSerializer
 
 
-class FixedPriceItemListWishSerializer(ModelSerializer):
+class ItemListWishSerializer(ModelSerializer):
     """Serializer Definition for FixedPriceItem List(store)"""
 
     # 대표 이미지만 불러 오는 지 확인해야됨
@@ -40,14 +40,14 @@ class FixedPriceItemListWishSerializer(ModelSerializer):
 
     def get_is_liked(self, item):
         request = self.context["request"]
-        return TempWishlist.objects.filter(
+        return Wishlist.objects.filter(
             user_id=request.user.get("user_id"),
             items__pk=item.pk,
         ).exists()
 
     def get_count_liked(self, item):
         request = self.context["request"]
-        return TempWishlist.objects.filter(items__pk=item.pk).count()
+        return Wishlist.objects.filter(items__pk=item.pk).count()
 
     def get_dday(self, item):
         if item.dday_date:
@@ -56,7 +56,7 @@ class FixedPriceItemListWishSerializer(ModelSerializer):
         return None
 
 
-class FixedPriceItemListSerializer(ModelSerializer):
+class ItemListSerializer(ModelSerializer):
     """Serializer Definition for Item List(store)"""
 
     # 대표 이미지만 불러 오는 지 확인해야됨
@@ -66,7 +66,7 @@ class FixedPriceItemListSerializer(ModelSerializer):
     count_liked = SerializerMethodField()
 
     class Meta:
-        model = FixedPriceItem
+        model = Item
 
         fields = (
             "item_name",
@@ -90,7 +90,7 @@ class FixedPriceItemListSerializer(ModelSerializer):
 
     def get_is_liked(self, item):
         request = self.context["request"]
-        return TempWishlist.objects.filter(
+        return Wishlist.objects.filter(
             user_id=request.user.get("user_id"),
             items__pk=item.pk,
         ).exists()
@@ -103,23 +103,23 @@ class FixedPriceItemListSerializer(ModelSerializer):
 
     def get_count_liked(self, item):
         request = self.context["request"]
-        return TempWishlist.objects.filter(items__pk=item.pk).count()
+        return Wishlist.objects.filter(items__pk=item.pk).count()
 
 
-class FixedPriceItemDetailSerializer(ModelSerializer):
+class ItemDetailSerializer(ModelSerializer):
     photos = PhotoSerializer(many=True, read_only=True)
     is_liked = SerializerMethodField()
     count_liked = SerializerMethodField()
     dday = SerializerMethodField()
 
     class Meta:
-        model = FixedPriceItem
+        model = Item
 
         fields = "__all__"
 
     def get_is_liked(self, item):
         request = self.context["request"]
-        return TempWishlist.objects.filter(
+        return Wishlist.objects.filter(
             user_id=request.user.get("uid"),
             items__pk=item.pk,
         ).exists()
@@ -132,4 +132,4 @@ class FixedPriceItemDetailSerializer(ModelSerializer):
 
     def get_count_liked(self, item):
         request = self.context["request"]
-        return TempWishlist.objects.filter(items__pk=item.pk).count()
+        return Wishlist.objects.filter(items__pk=item.pk).count()

@@ -1,17 +1,17 @@
 from django.db.models import Q
 from django_filters import rest_framework as filters
-from .models import Item
+from .models import FixedPriceItem
 
 
 class ItemFilter(filters.FilterSet):
-    category = filters.ChoiceFilter(choices=Item.CategoryChoices.choices)
-    used_years = filters.ChoiceFilter(choices=Item.UsedYearChoices.choices)
+    category = filters.ChoiceFilter(choices=FixedPriceItem.CategoryChoices.choices)
+    used_years = filters.ChoiceFilter(choices=FixedPriceItem.UsedYearChoices.choices)
     price = filters.RangeFilter()
-    location = filters.ChoiceFilter(choices=Item.LocationChoices.choices)
+    location = filters.ChoiceFilter(choices=FixedPriceItem.LocationChoices.choices)
     search = filters.CharFilter(method="search_item")
 
     class Meta:
-        model = Item
+        model = FixedPriceItem
         fields = ["category", "used_years", "price", "location", "search"]
 
 

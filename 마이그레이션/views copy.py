@@ -22,8 +22,8 @@ from rest_framework.exceptions import (
 from django_filters.rest_framework import DjangoFilterBackend
 from config.settings import PAGE_SIZE
 from photos.serializers import PhotoSerializer
-from .models import FixedPriceItem
-from .serializers import FixedPriceItemListSerializer, FixedPriceItemDetailSerializer
+from .models import Item
+from .serializers import ItemListSerializer, ItemDetailSerializer
 from .filters import ItemFilter
 
 
@@ -113,14 +113,15 @@ class Items(APIView):
         # all_items = all_items[start:end]
         """test end"""
 
+
         now = timezone.now().date()
 
         # 적용되던 코드 very important
-        # all_items = Item.objects.filter(query).order_by("dday_date","-created_at")[start:end]
+        # all_items = Item.objects.filter(query).order_by("dday_date","-created_at")[start:end] 
 
         # sorting items in order by created condition
         all_items = (
-            FixedPriceItem.objects.filter(query)
+            Item.objects.filter(query)
             .annotate(
                 order_priority=Case(
                     When(dday_date__lte=now, then=Value(1)),
@@ -137,7 +138,8 @@ class Items(APIView):
             .order_by("order_priority", "custom_date", "-created_at")
         )[start:end]
 
-        serializer = FixedPriceItemListSerializer(
+
+        serializer = ItemListSerializer(
             all_items,
             many=True,
             context={"request": request},
@@ -156,17 +158,13 @@ class Items(APIView):
         """
 
         if search_query or categories or used_years or locations:
-            from stats.models import (
-                SearchStats,
-                SearchCategory,
-                SearchLocation,
-                SearchUsedYears,
-            )
-
+        
+            from stats.models import SearchStats, SearchCategory, SearchLocation, SearchUsedYears
+            
             # 1. Create the SearchStats instance and set the user_id.
-            search_stat = SearchStats(user_id=request.user["user_id"])
+            search_stat = SearchStats(user_id=request.user['user_id'])
             search_stat.save()
-
+            
             # 2. Handle many-to-many relationships.
             # Categories
             for category in categories:
@@ -187,11 +185,11 @@ class Items(APIView):
 
             # 3. Save the SearchStats instance.
             search_stat.save()
-
+        
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = FixedPriceItemDetailSerializer(
+        serializer = ItemDetailSerializer(
             data=request.data,
             context={"request": request},
         )
@@ -227,7 +225,7 @@ class Items(APIView):
                         return Response(serializer.errors)
 
                 return Response(
-                    FixedPriceItemDetailSerializer(
+                    ItemDetailSerializer(
                         item,
                         context={"request": request},
                     ).data
@@ -268,14 +266,14 @@ class ItemDetail(APIView):
 
     def get_object(self, pk):
         try:
-            return FixedPriceItem.objects.get(pk=pk)
+            return Item.objects.get(pk=pk)
 
-        except FixedPriceItem.DoesNotExist:
+        except Item.DoesNotExist:
             raise NotFound
 
     def get(self, request, pk):
         item = self.get_object(pk)
-        serializer = FixedPriceItemDetailSerializer(
+        serializer = ItemDetailSerializer(
             item,
             context={"request": request},
         )
@@ -288,7 +286,7 @@ class ItemDetail(APIView):
         if "dday_date" in data:
             data.pop("dday_date")  # Remove 'd-day' from the data if it exists
 
-        serializer = FixedPriceItemDetailSerializer(
+        serializer = ItemDetailSerializer(
             item,
             data=data,
             partial=True,
@@ -304,7 +302,7 @@ class ItemDetail(APIView):
                 item = serializer.save()
 
                 return Response(
-                    FixedPriceItemDetailSerializer(
+                    ItemDetailSerializer(
                         item,
                         context={"request": request},
                     ).data
@@ -320,13 +318,13 @@ class ItemDetail(APIView):
         else:
             item.is_deleted = True
 
-        serializer = FixedPriceItemDetailSerializer(
+        serializer = ItemDetailSerializer(
             item, data=request.data, context={"request": request}, partial=True
         )
 
         if serializer.is_valid():
             item = serializer.save()
-            item = FixedPriceItemDetailSerializer(item)
+            item = ItemDetailSerializer(item)
             return Response(serializer.data)
         else:
             return Response(serializer.errors)
@@ -335,9 +333,9 @@ class ItemDetail(APIView):
 class ItemPurchase(APIView):
     def get_object(self, pk):
         try:
-            return FixedPriceItem.objects.get(pk=pk)
+            return Item.objects.get(pk=pk)
 
-        except FixedPriceItem.DoesNotExist:
+        except Item.DoesNotExist:
             raise NotFound
 
     def put(self, request, pk):
@@ -352,13 +350,13 @@ class ItemPurchase(APIView):
             item.is_sold = True
             item.buy_user_id = request.data.get("buy_uid")
 
-        serializer = FixedPriceItemDetailSerializer(
+        serializer = ItemDetailSerializer(
             item, data=request.data, context={"request": request}, partial=True
         )
 
         if serializer.is_valid():
             item = serializer.save()
-            item = FixedPriceItemDetailSerializer(item)
+            item = ItemDetailSerializer(item)
             return Response(serializer.data)
         else:
             return Response(serializer.errors)
@@ -367,9 +365,9 @@ class ItemPurchase(APIView):
 class ItemDelete(APIView):
     def get_object(self, pk):
         try:
-            return FixedPriceItem.objects.get(pk=pk)
+            return Item.objects.get(pk=pk)
 
-        except FixedPriceItem.DoesNotExist:
+        except Item.DoesNotExist:
             raise NotFound
 
     def put(self, request, pk):
@@ -380,13 +378,13 @@ class ItemDelete(APIView):
         else:
             item.is_deleted = True
 
-        serializer = FixedPriceItemDetailSerializer(
+        serializer = ItemDetailSerializer(
             item, data=request.data, context={"request": request}, partial=True
         )
 
         if serializer.is_valid():
             item = serializer.save()
-            item = FixedPriceItemDetailSerializer(item)
+            item = ItemDetailSerializer(item)
             return Response(serializer.data)
         else:
             return Response(serializer.errors)

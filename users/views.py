@@ -2,8 +2,8 @@ from django.contrib.auth.models import AnonymousUser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import ParseError, PermissionDenied
-from items.models import Item
-from items.serializers import ItemListSerializer
+from items.models import FixedPriceItem
+from items.serializers import FixedPriceItemListSerializer
 from config.settings import PAGE_SIZE, BUSINESS_SERVICE_KEY
 import requests, json
 
@@ -26,8 +26,10 @@ class UserPurchaseList(APIView):
         start = (page - 1) * page_size
         end = start + page_size
 
-        all_items = Item.objects.filter(buy_user_id=user_id, is_sold=True, is_deleted=False)[start:end]
-        serializer = ItemListSerializer(
+        all_items = FixedPriceItem.objects.filter(
+            buy_user_id=user_id, is_sold=True, is_deleted=False
+        )[start:end]
+        serializer = FixedPriceItemListSerializer(
             all_items,
             many=True,
             context={"request": request},
@@ -144,8 +146,10 @@ class UserSellingList(APIView):
         start = (page - 1) * page_size
         end = start + page_size
 
-        all_items = Item.objects.filter(user_id=user_id, is_sold=False, is_deleted=False)[start:end]
-        serializer = ItemListSerializer(
+        all_items = FixedPriceItem.objects.filter(
+            user_id=user_id, is_sold=False, is_deleted=False
+        )[start:end]
+        serializer = FixedPriceItemListSerializer(
             all_items,
             many=True,
             context={"request": request},
@@ -186,8 +190,10 @@ class UserSoldList(APIView):
         start = (page - 1) * page_size
         end = start + page_size
 
-        all_items = Item.objects.filter(user_id=user_id, is_sold=True, is_deleted=False)[start:end]
-        serializer = ItemListSerializer(
+        all_items = FixedPriceItem.objects.filter(
+            user_id=user_id, is_sold=True, is_deleted=False
+        )[start:end]
+        serializer = FixedPriceItemListSerializer(
             all_items,
             many=True,
             context={"request": request},

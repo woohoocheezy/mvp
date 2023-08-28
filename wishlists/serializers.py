@@ -1,11 +1,11 @@
 from rest_framework import serializers
-from items.serializers import ItemListWishSerializer
-from .models import Wishlist
+from items.serializers import FixedPriceItemListWishSerializer
+from .models import TempWishlist
 
 
 class WishlistSerializer(serializers.ModelSerializer):
-    items = ItemListWishSerializer(many=True, read_only=True)
+    items = FixedPriceItemListWishSerializer(many=True, read_only=True)
 
     class Meta:
-        model = Wishlist
+        model = TempWishlist
         fields = ("id", "name", "items")

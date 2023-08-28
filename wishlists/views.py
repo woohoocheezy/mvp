@@ -5,9 +5,9 @@ from rest_framework.views import APIView
 # from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
 from rest_framework.status import HTTP_200_OK
-from .models import Wishlist
+from .models import TempWishlist
 from .serializers import WishlistSerializer
-from items.models import Item
+from items.models import FixedPriceItem
 from config.settings import PAGE_SIZE
 
 
@@ -35,7 +35,7 @@ class Wishlists(APIView):
         start = (page - 1) * page_size
         end = start + page_size
 
-        all_wishilists = Wishlist.objects.filter(user_id=request.user.get("uid"))[
+        all_wishilists = TempWishlist.objects.filter(user_id=request.user.get("uid"))[
             start:end
         ]
         serializer = WishlistSerializer(
@@ -88,14 +88,14 @@ class WishlistDetail(APIView):
         """
 
         try:
-            return Wishlist.objects.get(user_id=request.user.get("uid"))
-        except Wishlist.DoesNotExist:
+            return TempWishlist.objects.get(user_id=request.user.get("uid"))
+        except TempWishlist.DoesNotExist:
             serializer = WishlistSerializer(data=request.data)
 
             if serializer.is_valid():
                 wishlist = serializer.save(user_id=request.user.get("uid"))
                 serializer = WishlistSerializer(wishlist)
-                return Wishlist.objects.get(user_id=request.user.get("uid"))
+                return TempWishlist.objects.get(user_id=request.user.get("uid"))
             else:
                 return Response(serializer.errors)
 
@@ -143,7 +143,7 @@ class WishlistDetail(APIView):
     #     Return: the serialized data of the wishlist with 'the pk & the user' which is UPDATED
     #     """
 
-    #     wishlist = self.get_object(pk, request.data.get("user_id"))  
+    #     wishlist = self.get_object(pk, request.data.get("user_id"))
     #     serializer = WishlistSerializer(wishlist, data=request.data, partial=True)
 
     #     if serializer.is_valid():
@@ -179,8 +179,8 @@ class WishlistToogle(APIView):
         """
 
         try:
-            return Wishlist.objects.get(user_id=user_id)
-        except Wishlist.DoesNotExist:
+            return TempWishlist.objects.get(user_id=user_id)
+        except TempWishlist.DoesNotExist:
             raise NotFound
 
     def get_item(self, pk):
@@ -192,8 +192,8 @@ class WishlistToogle(APIView):
         """
 
         try:
-            return Item.objects.get(pk=pk)
-        except Item.DoesNotExist:
+            return FixedPriceItem.objects.get(pk=pk)
+        except FixedPriceItem.DoesNotExist:
             raise NotFound
 
     def put(self, request, item_pk):

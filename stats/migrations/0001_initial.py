@@ -155,7 +155,7 @@ class Migration(migrations.Migration):
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 ("user_id", models.TextField(default="")),
                 (
-                    "most_searched_keyword",
+                    "searched_keyword",
                     models.CharField(blank=True, max_length=255, null=True),
                 ),
                 (
