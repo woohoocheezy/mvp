@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer
-from .models import TempPhoto
+from .models import Photo
 
 
 class PhotoSerializer(ModelSerializer):
@@ -7,7 +7,7 @@ class PhotoSerializer(ModelSerializer):
     """Serializer Definition for Photo"""
 
     class Meta:
-        model = TempPhoto
+        model = Photo
 
         fields = (
             "pk",

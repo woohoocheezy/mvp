@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import Wishlists, WishlistDetail, WishlistToogle
+from .views import Wishlists, WishlistDetail, WishlistToggle
 
 urlpatterns = [
-    path("", WishlistDetail.as_view()),
-    path("items/<int:item_pk>", WishlistToogle.as_view()),
+    path("fixed-price/", WishlistDetail.as_view()),
+    path("items/fixed-price/<str:item_pk>", WishlistToggle.as_view()),
 ]

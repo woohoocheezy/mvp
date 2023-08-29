@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import TempPhoto
+from .models import Photo
 from django.contrib.contenttypes.admin import GenericTabularInline
 
 
@@ -18,13 +18,13 @@ from django.contrib.contenttypes.admin import GenericTabularInline
 
 
 class PhotoInline(GenericTabularInline):
-    model = TempPhoto
+    model = Photo
     ct_field = "content_type"
     ct_fk_field = "object_id"
     extra = 1
 
 
-@admin.register(TempPhoto)
+@admin.register(Photo)
 class PhotoAdmin(admin.ModelAdmin):
     list_display = (
         "photo_uuid",

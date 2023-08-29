@@ -5,7 +5,7 @@ from commons.models import CommonModel
 import uuid
 
 
-class TempPhoto(CommonModel):
+class Photo(CommonModel):
 
     """Photo Model Definition"""
 
@@ -22,6 +22,7 @@ class TempPhoto(CommonModel):
     content_type = models.ForeignKey(
         ContentType,
         on_delete=models.CASCADE,
+        related_name="photos",
     )
     object_id = models.UUIDField()
 
