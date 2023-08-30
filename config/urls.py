@@ -23,4 +23,5 @@ urlpatterns = [
     path("api/mvp/items/", include("items.urls")),
     path("api/mvp/photos/", include("photos.urls")),
     path("api/mvp/wishlists/", include("wishlists.urls")),
+    path("api/mvp/biddings/", include("biddings.urls")),
 ]

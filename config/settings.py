@@ -30,7 +30,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['34.130.129.142', 'localhost', '127.0.0.1', '0.0.0.0']
+ALLOWED_HOSTS = ["34.130.129.142", "localhost", "127.0.0.1", "0.0.0.0"]
 
 
 # Application definition
@@ -46,6 +46,7 @@ CUSTOM_APPS = [
     "wishlists.apps.WishlistsConfig",
     "stats.apps.StatsConfig",
     "authentication.apps.AuthenticationConfig",
+    "biddings.apps.BiddingsConfig",
     "django_celery_results",
     "push_notification",
 ]
@@ -126,9 +127,9 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD"),
         "HOST": os.getenv("DB_HOST"),
         "PORT": os.getenv("DB_PORT"),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'init_command': 'SET character_set_connection=utf8mb4,collation_connection=utf8mb4_unicode_ci',
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            "init_command": "SET character_set_connection=utf8mb4,collation_connection=utf8mb4_unicode_ci",
         },
     }
 }

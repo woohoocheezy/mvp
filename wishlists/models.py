@@ -18,7 +18,7 @@ class Wishlist(CommonModel):
         blank=True,
     )
 
-    items = models.ManyToManyField(
+    fixed_price_items = models.ManyToManyField(
         FixedPriceItem,
         related_name="wishlists",
     )

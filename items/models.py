@@ -106,9 +106,6 @@ class BaseItem(CommonModel):
         max_length=10, choices=LocationChoices.choices, null=True
     )
 
-    temp_item_id = models.TextField(default="")
-    temp_user_id = models.TextField(default="")
-
     class Meta:
         abstract = True
 
@@ -126,8 +123,7 @@ class FixedPriceItem(BaseItem):
 
 
 class AuctionItem(BaseItem):
-    # about d-day
-    deadline = models.DateTimeField()
+    deadline = models.DateField()
     lowest_price = models.PositiveIntegerField()
 
     def __str__(self):
