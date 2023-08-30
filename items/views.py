@@ -460,9 +460,9 @@ class AuctionItems(APIView):
         if used_years:
             query &= Q(used_years__in=used_years)
         if min_price:
-            query &= Q(price__gte=min_price)
+            query &= Q(lowest_price__gte=min_price)
         if max_price:
-            query &= Q(price__lte=max_price)
+            query &= Q(lowest_price__lte=max_price)
         # if location:
         #     query &= Q(location__icontains=location)
         if locations:
@@ -599,7 +599,7 @@ class AuctionItems(APIView):
                         return Response(serializer.errors)
 
                 return Response(
-                    FixedPriceItemDetailSerializer(
+                    AuctionItemDetailSerializer(
                         item,
                         context={"request": request},
                     ).data

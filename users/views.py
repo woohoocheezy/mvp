@@ -2,16 +2,18 @@ from django.contrib.auth.models import AnonymousUser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import ParseError, PermissionDenied
-from items.models import FixedPriceItem
-from items.serializers import FixedPriceItemListSerializer
+from items.models import FixedPriceItem, AuctionItem
+from items.serializers import (
+    FixedPriceItemListSerializer,
+    AuctionItemListSerializer,
+    UserSoldSerializer,
+)
 from config.settings import PAGE_SIZE, BUSINESS_SERVICE_KEY
 import requests, json
 
 
-class UserPurchaseList(APIView):
+class UserFixedPriceItemPurchaseList(APIView):
     def get(self, request):
-        # print(request.user.get("uid"))
-
         user_id = request.user.get("uid")
 
         if not user_id:
@@ -27,14 +29,45 @@ class UserPurchaseList(APIView):
         end = start + page_size
 
         all_items = FixedPriceItem.objects.filter(
-            buy_user_id=user_id, is_sold=True, is_deleted=False
+            # buy_user_id=user_id, is_sold=True, is_deleted=False
+            buy_user_id=user_id,
+            is_sold=True,
         )[start:end]
         serializer = FixedPriceItemListSerializer(
             all_items,
             many=True,
             context={"request": request},
         )
-        # print(serializer.data)
+
+        return Response(serializer.data)
+
+
+class UserAuctionItemPurchaseList(APIView):
+    def get(self, request):
+        user_id = request.user.get("uid")
+
+        if not user_id:
+            return Response(PermissionDenied)
+
+        try:
+            page = int(request.query_params.get("page", 1))
+        except ValueError:
+            page = 1
+
+        page_size = PAGE_SIZE
+        start = (page - 1) * page_size
+        end = start + page_size
+
+        all_items = AuctionItem.objects.filter(
+            # buy_user_id=user_id, is_sold=True, is_deleted=False
+            buy_user_id=user_id,
+            is_sold=True,
+        )[start:end]
+        serializer = AuctionItemListSerializer(
+            all_items,
+            many=True,
+            context={"request": request},
+        )
 
         return Response(serializer.data)
 
@@ -120,7 +153,7 @@ class BusinessLicense(APIView):
             return Response({"error": "Missing license number"})
 
 
-class UserSellingList(APIView):
+class UserFixedPriceItemSellingList(APIView):
 
     """The list of user's selling list
 
@@ -159,9 +192,9 @@ class UserSellingList(APIView):
         return Response(serializer.data)
 
 
-class UserSoldList(APIView):
+class UserAuctionItemSellingList(APIView):
 
-    """The list of user's sold list
+    """The list of user's selling list
 
     Keyword arguments:
     argument -- description
@@ -169,14 +202,7 @@ class UserSoldList(APIView):
     """
 
     def get(self, request):
-        # print(request.user.get("uid"))
-        # print(request.user, type(request.user))
-
-        if type(request.user) == AnonymousUser:
-            return Response(PermissionDenied)
-
         user_id = request.user.get("uid")
-        # print(user_id)
 
         if not user_id:
             return Response(PermissionDenied)
@@ -190,15 +216,56 @@ class UserSoldList(APIView):
         start = (page - 1) * page_size
         end = start + page_size
 
-        all_items = FixedPriceItem.objects.filter(
-            user_id=user_id, is_sold=True, is_deleted=False
+        all_items = AuctionItem.objects.filter(
+            user_id=user_id, is_sold=False, is_deleted=False
         )[start:end]
-        serializer = FixedPriceItemListSerializer(
+        serializer = AuctionItemListSerializer(
             all_items,
             many=True,
             context={"request": request},
         )
-        # print(serializer.data)
+
+        return Response(serializer.data)
+
+
+class UserSoldList(APIView):
+
+    """The list of user's sold list
+
+    Keyword arguments:
+    argument -- description
+    Return: return_description
+    """
+
+    def get(self, request):
+        print(request.user.get("uid"))
+        print(request.user, type(request.user))
+
+        if type(request.user) == AnonymousUser:
+            return Response(PermissionDenied)
+
+        user_id = request.user.get("uid")
+
+        if not user_id:
+            return Response(PermissionDenied)
+
+        try:
+            page = int(request.query_params.get("page", 1))
+        except ValueError:
+            page = 1
+
+        page_size = PAGE_SIZE
+        start = (page - 1) * page_size
+        end = start + page_size
+
+        queryset = list(
+            FixedPriceItem.objects.filter(user_id=user_id, is_sold=True)
+        ) + list(AuctionItem.objects.filter(user_id=user_id, is_sold=True))
+        queryset.sort(key=lambda x: x.created_at, reverse=True)
+        paginated_querset = queryset[start:end]
+        serializer = UserSoldSerializer(
+            paginated_querset, context={"request": request}, many=True
+        )
 
         return Response(serializer.data)
 
