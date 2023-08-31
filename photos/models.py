@@ -30,18 +30,3 @@ class Photo(CommonModel):
         "content_type",
         "object_id",
     )
-
-
-# class Photo(CommonModel):
-
-#     """Photo Model Definition"""
-
-#     file = models.URLField()
-
-#     item = models.ForeignKey(
-#         "items.Item",
-#         null=True,
-#         blank=True,
-#         related_name="photos",
-#         on_delete=models.SET_NULL,
-#     )

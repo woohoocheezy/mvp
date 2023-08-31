@@ -10,6 +10,17 @@ from django.db.models import (
     DateField,
 )
 from django.utils import timezone
+from django.db.models import (
+    Q,
+    BooleanField,
+    Case,
+    When,
+    Value,
+    IntegerField,
+    F,
+    DateField,
+)
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
@@ -69,13 +80,22 @@ class FixedPriceItems(APIView):
         start = (page - 1) * page_size
         end = start + page_size
         # print(f"request.query_params : {request.query_params}")
+        # print(f"request.query_params : {request.query_params}")
         search_query = request.query_params.get("search", "")
+        # category = request.query_params.get("category")
+        categories = request.query_params.getlist("category")
+        # used_years = request.query_params.get("used_years")
+        used_years = request.query_params.getlist("used_years")
         # category = request.query_params.get("category")
         categories = request.query_params.getlist("category")
         # used_years = request.query_params.get("used_years")
         used_years = request.query_params.getlist("used_years")
         min_price = request.query_params.get("min_price")
         max_price = request.query_params.get("max_price")
+        # location = request.query_params.get("location")
+        locations = request.query_params.getlist("location")
+        # print(f"search_query : {search_query}")
+        # print(used_years)
         # location = request.query_params.get("location")
         locations = request.query_params.getlist("location")
         # print(f"search_query : {search_query}")
@@ -91,12 +111,21 @@ class FixedPriceItems(APIView):
         #     query &= Q(category__icontains=category)
         if categories:
             query &= Q(category__in=categories)
+        # if category:
+        #     query &= Q(category__icontains=category)
+        if categories:
+            query &= Q(category__in=categories)
         if used_years:
+            query &= Q(used_years__in=used_years)
             query &= Q(used_years__in=used_years)
         if min_price:
             query &= Q(price__gte=min_price)
         if max_price:
             query &= Q(price__lte=max_price)
+        # if location:
+        #     query &= Q(location__icontains=location)
+        if locations:
+            query &= Q(location__in=locations)
         # if location:
         #     query &= Q(location__icontains=location)
         if locations:
@@ -160,6 +189,39 @@ class FixedPriceItems(APIView):
         used_years = request.query_params.getlist("used_years")
         locations = request.query_params.getlist("location")
         """
+
+        if search_query or categories or used_years or locations:
+            from stats.models import (
+                SearchStats,
+                SearchCategory,
+                SearchLocation,
+                SearchUsedYears,
+            )
+
+            # 1. Create the SearchStats instance and set the user_id.
+            search_stat = SearchStats(user_id=request.user["user_id"])
+            search_stat.save()
+
+            # 2. Handle many-to-many relationships.
+            # Categories
+            for category in categories:
+                obj, _ = SearchCategory.objects.get_or_create(category=category)
+                search_stat.searched_categories.add(obj)
+
+            # Used Years
+            for used_year in used_years:
+                obj, _ = SearchUsedYears.objects.get_or_create(used_years=used_year)
+                search_stat.searched_used_years.add(obj)
+
+            # Locations
+            for location in locations:
+                obj, _ = SearchLocation.objects.get_or_create(location=location)
+                search_stat.searched_locations.add(obj)
+
+            search_stat.searched_keyword = search_query
+
+            # 3. Save the SearchStats instance.
+            search_stat.save()
 
         if search_query or categories or used_years or locations:
             from stats.models import (
@@ -296,6 +358,7 @@ class FixedPriceItemDetail(APIView):
 
         serializer = FixedPriceItemDetailSerializer(
             item,
+            data=data,
             data=data,
             partial=True,
         )
