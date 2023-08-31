@@ -42,7 +42,7 @@ def send_push_notifications():
         except Item.DoesNotExist:
             continue
 
-        if item.is_sold == False:
+        if item.is_sold == False and item.is_deleted == False:
             user_ref = db.collection("user").document(userID)
             user = user_ref.get().to_dict()
 
@@ -56,3 +56,4 @@ def send_push_notifications():
                     message_title=message_title,
                     message_body=message_body,
                 )
+                print(result)

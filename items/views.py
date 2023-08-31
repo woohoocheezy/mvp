@@ -120,7 +120,7 @@ class Items(APIView):
             Item.objects.filter(query)
             .annotate(
                 order_priority=Case(
-                    When(dday_date__lte=now, then=Value(1)),
+                    When(dday_date__lt=now, then=Value(1)),
                     default=Value(0),
                     output_field=IntegerField(),
                 ),
@@ -159,13 +159,17 @@ class Items(APIView):
         # print(serializer.data)
 
         if search_query or categories or used_years or locations:
-        
-            from stats.models import SearchStats, SearchCategory, SearchLocation, SearchUsedYears
-            
+            from stats.models import (
+                SearchStats,
+                SearchCategory,
+                SearchLocation,
+                SearchUsedYears,
+            )
+
             # 1. Create the SearchStats instance and set the user_id.
-            search_stat = SearchStats(user_id=request.user['user_id'])
+            search_stat = SearchStats(user_id=request.user["user_id"])
             search_stat.save()
-            
+
             # 2. Handle many-to-many relationships.
             # Categories
             for category in categories:
