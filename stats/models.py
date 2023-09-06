@@ -1,6 +1,6 @@
 from django.db import models
 from commons.models import CommonModel
-from items.models import Item
+from items.models import BaseItem
 
 
 class ItemStatsDaily(CommonModel):
@@ -15,21 +15,23 @@ class ItemStatsDaily(CommonModel):
 
 
 class SearchCategory(models.Model):
-    category = models.CharField(max_length=25, choices=Item.CategoryChoices.choices)
+    category = models.CharField(max_length=25, choices=BaseItem.CategoryChoices.choices)
 
     def __str__(self):
         return self.category
 
 
 class SearchLocation(models.Model):
-    location = models.CharField(max_length=10, choices=Item.LocationChoices.choices)
+    location = models.CharField(max_length=10, choices=BaseItem.LocationChoices.choices)
 
     def __str__(self):
         return self.location
 
 
 class SearchUsedYears(models.Model):
-    used_years = models.CharField(max_length=20, choices=Item.UsedYearChoices.choices)
+    used_years = models.CharField(
+        max_length=20, choices=BaseItem.UsedYearChoices.choices
+    )
 
     def __str__(self):
         return self.used_years

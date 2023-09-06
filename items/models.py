@@ -1,10 +1,15 @@
 from django.db import models
 from commons.models import CommonModel
+import uuid
 
 
-class Item(CommonModel):
+class BaseItem(CommonModel):
 
-    """Item Model Definition"""
+    """
+    The 'Abstract Base Class' base Item model for items that have own way of
+    selling like FixedPriceItem and AuctionItem.
+    It contains the common fields.
+    """
 
     class UsedYearChoices(models.TextChoices):
 
@@ -63,24 +68,23 @@ class Item(CommonModel):
         JUNGGU = ("중구", "중구")
         JUNGRYANG = ("중량구", "중량구")
 
+    item_uuid = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
+    )
     user_id = models.TextField(default="")
+    buy_user_id = models.TextField(default="", null=True, blank=True)
+
     item_name = models.CharField(
         default="",
         max_length=20,
     )
 
-    # negotiable
-    is_negotiable = models.BooleanField(
-        default=False,
-    )
-
     is_sold = models.BooleanField(default=False)
-    buy_user_id = models.TextField(default="", null=True, blank=True)
 
     is_deleted = models.BooleanField(default=False)
-
-    # price
-    price = models.PositiveIntegerField()
 
     # used years
     used_years = models.CharField(
@@ -90,9 +94,7 @@ class Item(CommonModel):
 
     # manufactured date
     manufactured_date = models.DateField(null=True, blank=True)
-
-    # warranty deadline
-    warranty_date = models.DateField(null=True, blank=True)
+    is_manufactured = models.BooleanField(default=True)
 
     # description
     description = models.TextField()
@@ -100,12 +102,32 @@ class Item(CommonModel):
     # category
     category = models.CharField(max_length=25, choices=CategoryChoices.choices)
 
-    # about d-day
-    dday_date = models.DateField(null=True, blank=True)
-
     location = models.CharField(
         max_length=10, choices=LocationChoices.choices, null=True
     )
+
+    class Meta:
+        abstract = True
+
+
+class FixedPriceItem(BaseItem):
+    # price
+    price = models.PositiveIntegerField()
+    # negotiable
+    is_negotiable = models.BooleanField(
+        default=False,
+    )
+
+    def __str__(self):
+        return self.item_name
+
+
+class AuctionItem(BaseItem):
+    deadline = models.DateField()
+    lowest_price = models.PositiveIntegerField()
+    winning_bid = models.PositiveIntegerField(null=True, blank=True)
+    is_overdue = models.BooleanField(default=False)
+    is_bidded = models.BooleanField(default=False)
 
     def __str__(self):
         return self.item_name

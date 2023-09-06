@@ -1,12 +1,24 @@
 from django.urls import path
-from .views import ItemDetail, Items, ItemPurchase, ItemDelete
+from .views import (
+    FixedPriceItemDetail,
+    FixedPriceItems,
+    FixedPriceItemPurchase,
+    FixedPriceItemDelete,
+    AuctionItemDetail,
+    AuctionItems,
+    AuctionItemPurchase,
+    AuctionItemDelete,
+)
 
 # ItemPhotos
 
 urlpatterns = [
-    path("", Items.as_view()),
-    path("<int:pk>", ItemDetail.as_view()),
-    path("<int:pk>/is_sold", ItemPurchase.as_view()),
-    path("<int:pk>/is_deleted", ItemDelete.as_view()),
-    # path("<int:pk>/photos", ItemPhotos.as_view()),
+    path("fixed-price", FixedPriceItems.as_view()),
+    path("fixed-price/<str:pk>", FixedPriceItemDetail.as_view()),
+    path("fixed-price/<str:pk>/is_sold", FixedPriceItemPurchase.as_view()),
+    path("fixed-price/<str:pk>/is_deleted", FixedPriceItemDelete.as_view()),
+    path("auction", AuctionItems.as_view()),
+    path("auction/<str:pk>", AuctionItemDetail.as_view()),
+    path("auction/<str:pk>/is_sold", AuctionItemPurchase.as_view()),
+    path("auction/<str:pk>/is_deleted", AuctionItemDelete.as_view()),
 ]
