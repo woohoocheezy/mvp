@@ -47,6 +47,9 @@ class AuctionItemAdmin(admin.ModelAdmin):
         "item_name",
         "user_id",
         "buy_user_id",
+        "is_overdue",
+        "deadline",
+        "is_bidded",
         "is_sold",
         "is_deleted",
         "used_years",
@@ -55,6 +58,12 @@ class AuctionItemAdmin(admin.ModelAdmin):
         "description",
         "category",
         "location",
-        "deadline",
         "lowest_price",
+    )
+    list_filter = (
+        "is_overdue",
+        "is_bidded",
+        "is_sold",
+        "is_deleted",
+        "used_years",
     )

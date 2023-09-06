@@ -448,7 +448,7 @@ class AuctionItems(APIView):
         # print(used_years)
 
         query = Q()
-        query &= Q(is_sold=False, is_deleted=False)
+        query &= Q(is_sold=False, is_deleted=False, is_overdue=False)
         if search_query:
             query &= Q(item_name__icontains=search_query) | Q(
                 description__icontains=search_query

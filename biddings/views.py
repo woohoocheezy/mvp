@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.response import Response
+from datetime import date
 from items.models import AuctionItem
 from .models import Bidding
 from .serializers import BiddingSerializer
@@ -17,6 +18,13 @@ class MakeBidding(APIView):
     def post(self, request, item_pk):
         user_id = request.user.get("uid")
         auction_item = self.get_auction_item(item_pk)
+
+        # print(auction_item.deadline)
+        # print(date.today())
+        # print(auction_item.deadline < date.today())
+
+        if (auction_item.deadline < date.today()) is True:
+            raise ValidationError("이미 경매 마감일이 지난 상품임")
 
         if Bidding.objects.filter(user_id=user_id, auction_item__pk=item_pk).exists():
             raise ValidationError("이미 해당 상품에 대해 입찰함")

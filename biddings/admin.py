@@ -9,4 +9,5 @@ class PhotoAdmin(admin.ModelAdmin):
         "user_id",
         "auction_item",
         "bidding_price",
+        "created_at",
     )

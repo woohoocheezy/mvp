@@ -125,6 +125,9 @@ class FixedPriceItem(BaseItem):
 class AuctionItem(BaseItem):
     deadline = models.DateField()
     lowest_price = models.PositiveIntegerField()
+    winning_bid = models.PositiveIntegerField(null=True, blank=True)
+    is_overdue = models.BooleanField(default=False)
+    is_bidded = models.BooleanField(default=False)
 
     def __str__(self):
         return self.item_name
