@@ -128,6 +128,7 @@ class AuctionItemListWishSerializer(ModelSerializer):
     photo = SerializerMethodField()
     is_liked = SerializerMethodField()
     count_liked = SerializerMethodField()
+    count_bids = SerializerMethodField()
 
     class Meta:
         model = AuctionItem
@@ -143,6 +144,7 @@ class AuctionItemListWishSerializer(ModelSerializer):
             "is_liked",
             "count_liked",
             "is_deleted",
+            "count_bids",
         )
 
     def get_photo(self, auction_item):
@@ -163,6 +165,9 @@ class AuctionItemListWishSerializer(ModelSerializer):
     def get_count_liked(self, auction_item):
         return Wishlist.objects.filter(auction_items__pk=auction_item.pk).count()
 
+    def get_count_bids(self, auction_item):
+        return auction_item.biddings.count()
+
 
 class AuctionItemListSerializer(ModelSerializer):
     """Serializer Definition for Auction Item List(store)"""
@@ -170,6 +175,7 @@ class AuctionItemListSerializer(ModelSerializer):
     photo = SerializerMethodField()
     is_liked = SerializerMethodField()
     count_liked = SerializerMethodField()
+    count_bids = SerializerMethodField()
 
     class Meta:
         model = AuctionItem
@@ -186,6 +192,7 @@ class AuctionItemListSerializer(ModelSerializer):
             "is_deleted",
             "count_liked",
             "user_id",
+            "count_bids",
         )
 
     def get_photo(self, item):
@@ -205,11 +212,15 @@ class AuctionItemListSerializer(ModelSerializer):
     def get_count_liked(self, item):
         return Wishlist.objects.filter(auction_items__pk=item.pk).count()
 
+    def get_count_bids(self, auction_item):
+        return auction_item.biddings.count()
+
 
 class AuctionItemDetailSerializer(ModelSerializer):
     photos = SerializerMethodField()
     is_liked = SerializerMethodField()
     count_liked = SerializerMethodField()
+    count_bids = SerializerMethodField()
 
     class Meta:
         model = AuctionItem
@@ -233,6 +244,9 @@ class AuctionItemDetailSerializer(ModelSerializer):
 
     def get_count_liked(self, auction_item):
         return Wishlist.objects.filter(auction_items__pk=auction_item.pk).count()
+
+    def get_count_bids(self, auction_item):
+        return auction_item.biddings.count()
 
 
 class UserSoldSerializer(Serializer):
