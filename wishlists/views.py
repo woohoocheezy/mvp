@@ -169,17 +169,31 @@ class AuctionItemWishlistDetail(APIView):
         pk -- the primary key or the requested wishlist
         Return: the serialized data of the wishlist with 'the pk & the user'
         """
-        # try:
-        #     page = int(request.query_params.get("page", 1))
-        # except ValueError:
-        #     page = 1
-
-        # page_size = PAGE_SIZE
-        # start = (page - 1) * page_size
-        # end = start + page_size
         wishlist = self.get_object(request)
+
+        # Get teh page number from the query parameter (default to 1 if not provided)
+        try:
+            page = int(request.query_params.get("page", 1))
+        except ValueError:
+            page = 1
+
+        # Set the size of each page
+        page_size = PAGE_SIZE
+
+        # Calculate the start and end indices for slicing the queryset
+        start = (page - 1) * page_size
+        end = start + page_size
+
+        # Slice the auction_items QuerySet to only include items in the current page
+        auction_items_page = wishlist.auction_items.all()[start:end]
+
         serializer = AuctionItemWishlistSerializer(
-            wishlist, context={"request": request}
+            {
+                "wishlist_uuid": wishlist.wishlist_uuid,
+                "name": wishlist.name,
+                "auction_items": auction_items_page,
+            },
+            context={"request": request},
         )
         # print(serializer)
 
