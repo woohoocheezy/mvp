@@ -23,6 +23,3 @@ class Bidding(CommonModel):
         null=True,
         on_delete=models.SET_NULL,
     )
-
-
-# class WinningBidding(CommonModel):
