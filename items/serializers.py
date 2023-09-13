@@ -34,7 +34,9 @@ class FixedPriceItemListWishSerializer(ModelSerializer):
 
     def get_photo(self, item):
         content_type = ContentType.objects.get_for_model(item)
-        photos_queryset = content_type.photos.filter(object_id=item.pk)
+        photos_queryset = content_type.photos.filter(
+            object_id=item.pk, is_thumbnail=True
+        )
         photo_serializer = PhotoSerializer(photos_queryset, many=True)
 
         return photo_serializer.data[0] if photo_serializer.data else None
@@ -77,7 +79,9 @@ class FixedPriceItemListSerializer(ModelSerializer):
 
     def get_photo(self, item):
         content_type = ContentType.objects.get_for_model(item)
-        photos_queryset = content_type.photos.filter(object_id=item.pk)
+        photos_queryset = content_type.photos.filter(
+            object_id=item.pk, is_thumbnail=True
+        )
         photo_serializer = PhotoSerializer(photos_queryset, many=True)
 
         return photo_serializer.data[0] if photo_serializer.data else None
@@ -113,7 +117,9 @@ class FixedPriceItemDetailSerializer(ModelSerializer):
 
     def get_photos(self, item):
         content_type = ContentType.objects.get_for_model(item)
-        photos_queryset = content_type.photos.filter(object_id=item.pk)
+        photos_queryset = content_type.photos.filter(object_id=item.pk).order_by(
+            "-is_thumbnail"
+        )
         photo_serializer = PhotoSerializer(photos_queryset, many=True)
 
         return photo_serializer.data if photo_serializer.data else None
@@ -149,7 +155,9 @@ class AuctionItemListWishSerializer(ModelSerializer):
 
     def get_photo(self, auction_item):
         content_type = ContentType.objects.get_for_model(auction_item)
-        photos_queryset = content_type.photos.filter(object_id=auction_item.pk)
+        photos_queryset = content_type.photos.filter(
+            object_id=auction_item.pk, is_thunbnail=True
+        )
         photo_serializer = PhotoSerializer(photos_queryset, many=True)
 
         return photo_serializer.data[0] if photo_serializer.data else None
@@ -197,7 +205,9 @@ class AuctionItemListSerializer(ModelSerializer):
 
     def get_photo(self, item):
         content_type = ContentType.objects.get_for_model(item)
-        photos_queryset = content_type.photos.filter(object_id=item.pk)
+        photos_queryset = content_type.photos.filter(
+            object_id=item.pk, is_thumbnail=True
+        )
         photo_serializer = PhotoSerializer(photos_queryset, many=True)
 
         return photo_serializer.data[0] if photo_serializer.data else None
@@ -237,7 +247,9 @@ class AuctionItemDetailSerializer(ModelSerializer):
 
     def get_photos(self, auction_item):
         content_type = ContentType.objects.get_for_model(auction_item)
-        photos_queryset = content_type.photos.filter(object_id=auction_item.pk)
+        photos_queryset = content_type.photos.filter(
+            object_id=auction_item.pk
+        ).order_by("-is_thumbnail")
         photo_serializer = PhotoSerializer(photos_queryset, many=True)
 
         return photo_serializer.data if photo_serializer.data else None

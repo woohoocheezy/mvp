@@ -59,6 +59,7 @@ class AuctionItemAdmin(admin.ModelAdmin):
         "category",
         "location",
         "lowest_price",
+        "created_at",
     )
     list_filter = (
         "is_overdue",

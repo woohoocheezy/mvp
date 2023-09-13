@@ -17,7 +17,6 @@ class Photo(CommonModel):
     )
 
     file = models.URLField()
-    item_uuid = models.BigIntegerField(null=True)
 
     content_type = models.ForeignKey(
         ContentType,
@@ -31,17 +30,4 @@ class Photo(CommonModel):
         "object_id",
     )
 
-
-# class Photo(CommonModel):
-
-#     """Photo Model Definition"""
-
-#     file = models.URLField()
-
-#     item = models.ForeignKey(
-#         "items.Item",
-#         null=True,
-#         blank=True,
-#         related_name="photos",
-#         on_delete=models.SET_NULL,
-#     )
+    is_thumbnail = models.BooleanField(default=False)

@@ -220,6 +220,7 @@ class FixedPriceItems(APIView):
                 # print(item.pk)
                 # print(request.data.get("photos"))
 
+                photo_count = 0
                 for photo_file in request.data.get("photos"):
                     # print(type(photo_file), photo_file)
 
@@ -227,6 +228,10 @@ class FixedPriceItems(APIView):
 
                     if serializer.is_valid():
                         photo = serializer.save(item=item)
+                        if photo_count == 0:
+                            photo.is_thumbnail = True
+                            photo.save()
+                            photo_count += 1
                         serializer = PhotoSerializer(photo)
 
                     else:
@@ -586,6 +591,7 @@ class AuctionItems(APIView):
                 # print(item.pk)
                 # print(request.data.get("photos"))
 
+                photo_count = 0
                 for photo_file in request.data.get("photos"):
                     # print(type(photo_file), photo_file)
 
@@ -593,6 +599,10 @@ class AuctionItems(APIView):
 
                     if serializer.is_valid():
                         photo = serializer.save(item=item)
+                        if photo_count == 0:
+                            photo.is_thumbnail = True
+                            photo.save()
+                            photo_count += 1
                         serializer = PhotoSerializer(photo)
 
                     else:

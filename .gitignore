@@ -167,6 +167,6 @@ todo.md
 get_firebase_token.py
 uploadtest.png
 spacebar-83b06-firebase-adminsdk-t48ml-6d3af34ab7.json
-backup.sql
+*.sql
 staticfiles
 gunicorn.sock
