@@ -171,3 +171,4 @@ backup.sql
 staticfiles
 gunicorn.sock
 sosang.sql
+sosang_after_1.sql
