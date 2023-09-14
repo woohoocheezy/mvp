@@ -21,6 +21,7 @@ class CustomUser(models.Model):
 
     username = None
     password = None
+    temp_user_id = models.TextField(default="")  # need to be deleted later
 
     user_uuid = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
@@ -45,6 +46,7 @@ class CustomUser(models.Model):
         default=UserTypeChoices.LOCAL,
     )
     kakao_id = models.CharField(max_length=100, null=True, blank=True)
+    apple_id = models.CharField(max_length=100, null=True, blank=True)
 
     groups = models.ManyToManyField(
         "auth.Group",

@@ -6,6 +6,7 @@ from .models import CustomUser
 class UserAdmin(admin.ModelAdmin):
     list_display = (
         "user_uuid",
+        "temp_user_id",
         "nick_name",
         "user_type",
         "name",

@@ -35,21 +35,3 @@ class Wishlist(CommonModel):
         AuctionItem,
         related_name="wishlists",
     )  # need to remove on the step 4 after migration
-
-
-class WishlistFixedPriceItem(models.Model):
-    wishlist = models.ForeignKey(Wishlist, on_delete=models.CASCADE)
-    item = models.ForeignKey(FixedPriceItem, on_delete=models.CASCADE)
-    added_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ("wishlist", "item")
-
-
-class WishlistAuctionItem(models.Model):
-    wishlist = models.ForeignKey(Wishlist, on_delete=models.CASCADE)
-    item = models.ForeignKey(AuctionItem, on_delete=models.CASCADE)
-    added_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ("wishlist", "item")
