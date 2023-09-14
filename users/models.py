@@ -1,24 +1,70 @@
-import uuid
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser
+from django.conf import settings
+import uuid
 
 
-class User(AbstractBaseUser):
-    """User Model"""
+class CustomUser(models.Model):
 
-    username = models.CharField(max_length=20)  # nickname
-    # uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    # name = models.CharField(default="", max_length=20)  # real name of user
+    """User model for 소상공간"""
 
-    # phone_number = models.IntegerField(blank=False, null=False)
+    class UserTypeChoices(models.TextChoices):
+        KAKAO = ("kakao", "Kakao Login")
+        APPLE = ("apple", "Apple Login")
+        LOCAL = ("local", "Local Login")
 
-    # """사업자등록증 관련 정보"""
-    # # if the user certificate own business license reegistration(사업자등록증)
-    # is_business_license_certificated = models.BooleanField(default=False)
-    # license_number = models.IntegerField()
-    # license_name = models.CharField(max_length=20)
-    # license_date = models.DateField()
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="custom_user",
+        null=True,
+    )
 
-    # """지역 관련 정보"""
-    # # if the user is certificate own local area
-    # is_local_certificated = models.BooleanField(default=False)
+    username = None
+    password = None
+
+    user_uuid = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False, unique=True
+    )
+    chat_notification_allowed = models.BooleanField(default=True)
+    marketing_notification_allowed = models.BooleanField(default=True)
+    is_certificated = models.BooleanField(default=False)
+    create_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+    fcm_token = models.TextField(null=True, blank=True)
+    nick_name = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=13)
+    birth_date = models.DateField()
+    sector = models.CharField(max_length=13)
+    phone_number = models.CharField(max_length=60, unique=True)
+    profile_image_url = models.URLField(null=True, blank=True)
+    user_type = models.CharField(
+        max_length=10,
+        choices=UserTypeChoices.choices,
+        default=UserTypeChoices.LOCAL,
+    )
+    kakao_id = models.CharField(max_length=100, null=True, blank=True)
+
+    groups = models.ManyToManyField(
+        "auth.Group",
+        blank=True,
+        related_query_name="customuser",
+        related_name="customuser_set",
+    )
+    user_permissions = models.ManyToManyField(
+        "auth.Permission",
+        blank=True,
+        related_query_name="customuser",
+        related_name="customuser_set",
+    )
+
+    USERNAME_FIELD = "phone_number"
+    REQUIRED_FIELDS = []
+
+    def __str__(self):
+        return self.nick_name
+
+    @property
+    def is_authenticated(self):
+        return self.user.is_authenticated

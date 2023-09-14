@@ -1,3 +1,22 @@
 from django.contrib import admin
+from .models import CustomUser
 
-# Register your models here.
+
+@admin.register(CustomUser)
+class UserAdmin(admin.ModelAdmin):
+    list_display = (
+        "user_uuid",
+        "nick_name",
+        "user_type",
+        "name",
+        "chat_notification_allowed",
+        "marketing_notification_allowed",
+        "is_certificated",
+        "fcm_token",
+    )
+    list_filter = (
+        "user_type",
+        "chat_notification_allowed",
+        "marketing_notification_allowed",
+        "is_certificated",
+    )
