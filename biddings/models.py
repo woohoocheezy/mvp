@@ -14,12 +14,10 @@ class Bidding(CommonModel):
         unique=True,
     )
 
-    user_id = models.TextField()  # need to remove on the step 4 after migration
-    temp_user = models.ForeignKey(
+    user = models.ForeignKey(
         "users.CustomUser",
         on_delete=models.CASCADE,
         related_name="biddings",
-        null=True,
     )
     bidding_price = models.PositiveIntegerField()
 

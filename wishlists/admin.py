@@ -18,7 +18,17 @@ from .models import Wishlist
 
 @admin.register(Wishlist)
 class WishlistAdmin(admin.ModelAdmin):
-    list_display = ("wishlist_uuid", "user_id", "name", "created_at", "updated_at")
-    search_fields = ("wishlist_uuid", "user_id", "name")
+    list_display = (
+        "wishlist_uuid",
+        # "user_id",
+        "name",
+        "created_at",
+        "updated_at",
+    )
+    search_fields = (
+        "wishlist_uuid",
+        # "user_id",
+        "name",
+    )
     list_per_page = 20
     readonly_fields = ("wishlist_uuid", "created_at", "updated_at")

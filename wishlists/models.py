@@ -12,12 +12,10 @@ class Wishlist(CommonModel):
         unique=True,
     )
 
-    user_id = models.TextField()
-    temp_user = models.ForeignKey(
+    user = models.ForeignKey(
         "users.CustomUser",
         on_delete=models.CASCADE,
         related_name="wishlists",
-        null=True,
     )  # need to remove on the step 4 after migration
 
     name = models.CharField(

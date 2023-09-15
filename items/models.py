@@ -74,20 +74,13 @@ class BaseItem(CommonModel):
         editable=False,
         unique=True,
     )
-    user_id = models.TextField(
-        default=""
-    )  # need to remove on the step 4 after migration
-    buy_user_id = models.TextField(
-        default="", null=True, blank=True
-    )  # need to remove on the step 4 after migration
 
-    temp_user = models.ForeignKey(
+    user = models.ForeignKey(
         "users.CustomUser",
         on_delete=models.CASCADE,
         related_name="%(app_label)s_%(class)s_uploaded_items",
-        null=True,
     )
-    temp_buy_user = models.ForeignKey(
+    buy_user = models.ForeignKey(
         "users.CustomUser",
         on_delete=models.SET_NULL,
         related_name="%(app_label)s_%(class)s_purchased_items",

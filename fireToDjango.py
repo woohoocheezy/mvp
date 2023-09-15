@@ -102,19 +102,20 @@ def migrate_user_data():
         # print()
 
         if "name" not in data.keys():
-            continue
+            data["name"] = ""
 
         if data["name"] is None:
             data["name"] = ""
 
         if (
-            data["birthDate"] is None
+            "birthDate" not in data.keys()
+            or data["birthDate"] is None
             or data["birthDate"] == ""
             or len(data["birthDate"]) != 8
         ):
             data["birthDate"] = datetime.date(1900, 1, 1)
 
-        if data["sector"] is None:
+        if "sector" not in data.keys() or data["sector"] is None:
             data["sector"] = "test"
 
         if data["phoneNumber"] is None:
@@ -125,6 +126,9 @@ def migrate_user_data():
 
         if len(data["nickName"]) > 10:
             data["nickName"] = data["nickName"][:10]
+
+        if "kakaoId" not in data.keys():
+            data["kakaoId"] = None
 
         print(data["userId"])
 
@@ -197,7 +201,7 @@ def migrate_the_buy_user():
             )
             fixed_item.save()
         else:
-            print("fuck")
+            print("fuck3")
             # fixed_item.is_sold = False
             # fixed_item.save()
 
@@ -211,7 +215,7 @@ def migrate_the_buy_user():
             )
             auction_item.save()
         else:
-            print("fuck")
+            print("fuck2")
             auction_item.temp_buy_user = CustomUser.objects.get(nick_name="트레져")
             auction_item.save()
 
@@ -226,7 +230,7 @@ def migrate_bid_data():
             bid.temp_user = CustomUser.objects.get(temp_user_id=bid.user_id)
             bid.save()
         else:
-            print("fuck")
+            print("fuck1")
             bid.temp_user = CustomUser.objects.get(nick_name="트레져")
             bid.save()
 

@@ -21,7 +21,6 @@ class CustomUser(models.Model):
 
     username = None
     password = None
-    temp_user_id = models.TextField(default="")  # need to be deleted later
 
     user_uuid = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
