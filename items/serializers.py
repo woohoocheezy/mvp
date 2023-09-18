@@ -156,7 +156,7 @@ class AuctionItemListWishSerializer(ModelSerializer):
     def get_photo(self, auction_item):
         content_type = ContentType.objects.get_for_model(auction_item)
         photos_queryset = content_type.photos.filter(
-            object_id=auction_item.pk, is_thunbnail=True
+            object_id=auction_item.pk, is_thumbnail=True
         )
         photo_serializer = PhotoSerializer(photos_queryset, many=True)
 
