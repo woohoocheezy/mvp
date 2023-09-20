@@ -25,8 +25,8 @@ class FixedPriceItemAdmin(admin.ModelAdmin):
     list_display = (
         "item_uuid",
         "item_name",
-        # "user_id",
-        # "buy_user_id",
+        "user",
+        "buy_user",
         "is_sold",
         "is_deleted",
         "used_years",
@@ -37,6 +37,7 @@ class FixedPriceItemAdmin(admin.ModelAdmin):
         "location",
         "price",
         "is_negotiable",
+        "created_at",
     )
 
 
@@ -45,8 +46,8 @@ class AuctionItemAdmin(admin.ModelAdmin):
     list_display = (
         "item_uuid",
         "item_name",
-        # "user_id",
-        # "buy_user_id",
+        "user",
+        "buy_user",
         "is_overdue",
         "deadline",
         "is_bidded",

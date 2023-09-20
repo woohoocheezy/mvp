@@ -1,20 +1,8 @@
 from rest_framework.serializers import ModelSerializer
-from .models import User
+from .models import CustomUser
 
 
-class PrivateUserSerializer(ModelSerializer):
-    """for a Private user profile"""
-
+class CustomUserSerializer(ModelSerializer):
     class Meta:
-        model = User
-        exclude = (
-            "password",
-            "is_superuser",
-            "id",
-            "is_staff",
-            "is_active",
-            "first_name",
-            "last_name",
-            "groups",
-            "user_permissions",
-        )
+        model = CustomUser
+        fields = "__all__"

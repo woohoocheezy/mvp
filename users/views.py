@@ -1,24 +1,35 @@
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, User
+from django.conf import settings
+from django.db import IntegrityError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import ParseError, PermissionDenied
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_400_BAD_REQUEST,
+    HTTP_204_NO_CONTENT,
+)
+import json, requests, random, uuid
+from urllib.parse import urlparse
+from config.settings import PAGE_SIZE, BUSINESS_SERVICE_KEY
 from items.models import FixedPriceItem, AuctionItem
 from items.serializers import (
     FixedPriceItemListSerializer,
     AuctionItemListSerializer,
     UserSoldSerializer,
 )
-from config.settings import PAGE_SIZE, BUSINESS_SERVICE_KEY
-import requests, json
+from .models import CustomUser
+from .serializers import CustomUserSerializer
+from authentication.views import CustomTokenObtainPairSerializer
 
 
 class UserFixedPriceItemPurchaseList(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        user_id = request.user.get("uid")
-
-        if not user_id:
-            return Response(PermissionDenied)
-
         try:
             page = int(request.query_params.get("page", 1))
         except ValueError:
@@ -29,8 +40,7 @@ class UserFixedPriceItemPurchaseList(APIView):
         end = start + page_size
 
         all_items = FixedPriceItem.objects.filter(
-            # buy_user_id=user_id, is_sold=True, is_deleted=False
-            buy_user_id=user_id,
+            buy_user=request.user,
             is_sold=True,
         )[start:end]
         serializer = FixedPriceItemListSerializer(
@@ -43,12 +53,9 @@ class UserFixedPriceItemPurchaseList(APIView):
 
 
 class UserAuctionItemPurchaseList(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        user_id = request.user.get("uid")
-
-        if not user_id:
-            return Response(PermissionDenied)
-
         try:
             page = int(request.query_params.get("page", 1))
         except ValueError:
@@ -59,8 +66,7 @@ class UserAuctionItemPurchaseList(APIView):
         end = start + page_size
 
         all_items = AuctionItem.objects.filter(
-            # buy_user_id=user_id, is_sold=True, is_deleted=False
-            buy_user_id=user_id,
+            buy_user=request.user,
             is_sold=True,
         )[start:end]
         serializer = AuctionItemListSerializer(
@@ -86,17 +92,6 @@ class BusinessLicense(APIView):
 
                     # Set the service key (replace XXXXXXX with your actual API key)
                     service_key = f"{BUSINESS_SERVICE_KEY}"
-
-                    # Set the data as a dictionary
-                    # data = {
-                    #     "businesses": [
-                    #         {
-                    #             "b_no": "1222936420",
-                    #             "start_dt": "20110901",
-                    #             "p_nm": "이정희",
-                    #         }
-                    #     ]
-                    # }
 
                     data = {
                         "businesses": [
@@ -128,16 +123,21 @@ class BusinessLicense(APIView):
                         result = (
                             response.json()
                         )  # Convert the response to a JSON object
-                        print(result)  # Output the result
-                    else:
-                        # API request failed
-                        print(response.status_code)  # Output the HTTP status code
-                        print(response.text)  # Output the response body
+                        # print(result)  # Output the result
 
-                    if response.status_code == 200:
                         # Do any necessary data processing before sending the response to the client)
                         result = int(result["data"][0]["valid"])
                         response_data = {"result": result}
+
+                        user = CustomUser.objects.get(user_uuid=request.user.user_uuid)
+                        if result == 1:
+                            user.is_certificated = True
+                        else:
+                            user.is_certificated = False
+
+                        print(user.is_certificated)
+                        user.save()
+
                         return Response(response_data)
                     else:
                         # The API request was unsuccessful
@@ -162,14 +162,9 @@ class UserFixedPriceItemSellingList(APIView):
     Return: return_description
     """
 
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        # print(request.user.get("uid"))
-
-        user_id = request.user.get("uid")
-
-        if not user_id:
-            return Response(PermissionDenied)
-
         try:
             page = int(request.query_params.get("page", 1))
         except ValueError:
@@ -180,14 +175,13 @@ class UserFixedPriceItemSellingList(APIView):
         end = start + page_size
 
         all_items = FixedPriceItem.objects.filter(
-            user_id=user_id, is_sold=False, is_deleted=False
+            user=request.user, is_sold=False, is_deleted=False
         )[start:end]
         serializer = FixedPriceItemListSerializer(
             all_items,
             many=True,
             context={"request": request},
         )
-        # print(serializer.data)
 
         return Response(serializer.data)
 
@@ -201,12 +195,9 @@ class UserAuctionItemSellingList(APIView):
     Return: return_description
     """
 
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        user_id = request.user.get("uid")
-
-        if not user_id:
-            return Response(PermissionDenied)
-
         try:
             page = int(request.query_params.get("page", 1))
         except ValueError:
@@ -217,7 +208,7 @@ class UserAuctionItemSellingList(APIView):
         end = start + page_size
 
         all_items = AuctionItem.objects.filter(
-            user_id=user_id, is_sold=False, is_deleted=False
+            user=request.user, is_sold=False, is_deleted=False
         )[start:end]
         serializer = AuctionItemListSerializer(
             all_items,
@@ -237,18 +228,9 @@ class UserSoldList(APIView):
     Return: return_description
     """
 
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        print(request.user.get("uid"))
-        print(request.user, type(request.user))
-
-        if type(request.user) == AnonymousUser:
-            return Response(PermissionDenied)
-
-        user_id = request.user.get("uid")
-
-        if not user_id:
-            return Response(PermissionDenied)
-
         try:
             page = int(request.query_params.get("page", 1))
         except ValueError:
@@ -259,8 +241,14 @@ class UserSoldList(APIView):
         end = start + page_size
 
         queryset = list(
-            FixedPriceItem.objects.filter(user_id=user_id, is_sold=True)
-        ) + list(AuctionItem.objects.filter(user_id=user_id, is_sold=True))
+            FixedPriceItem.objects.filter(
+                user=request.user, is_sold=True, is_deleted=False
+            )
+        ) + list(
+            AuctionItem.objects.filter(
+                user=request.user, is_sold=True, is_deleted=False
+            )
+        )
         queryset.sort(key=lambda x: x.created_at, reverse=True)
         paginated_querset = queryset[start:end]
         serializer = UserSoldSerializer(
@@ -284,9 +272,9 @@ class UserSoldList(APIView):
 #         Return: the created user
 #         """
 
-#         # password validation
-#         password = request.data.get("password")
-#         if not password:
+#         # phone_number validation
+#         phone_number = request.data.get("phone_number")
+#         if not phone_number:
 #             raise ParseError
 
 #         serializer = PrivateUserSerializer(data=request.data)
@@ -302,3 +290,156 @@ class UserSoldList(APIView):
 
 #         else:
 #             return Response(serializer.errors)
+
+
+class UserCreate(APIView):
+    def post(self, request):
+        serializer = CustomUserSerializer(data=request.data)
+        if serializer.is_valid():
+            random_username = uuid.uuid4().hex[:10]
+            random_password = uuid.uuid4().hex[:10]
+            auth_user = User.objects.create_user(
+                username=random_username, password=random_password
+            )
+            user = serializer.save(user=auth_user)
+
+            token_serializer = CustomTokenObtainPairSerializer(
+                data={"phone_number": user.phone_number}
+            )
+
+            if token_serializer.is_valid():
+                return Response(
+                    token_serializer.validated_data, status=HTTP_201_CREATED
+                )
+        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
+
+class DeleteUser(APIView):
+    def delete(self, request):
+        user = request.user
+        user.delete()
+
+        return Response(status=HTTP_204_NO_CONTENT)
+
+
+class UserInformation(APIView):
+    def get(self, request):
+        user = request.user
+
+        try:
+            custom_user = user
+            data = {
+                "phone_number": custom_user.phone_number,
+                "user_type": custom_user.user_type,
+            }
+            return Response(data, status=HTTP_200_OK)
+        except CustomUser.DoesNotExist:
+            return Response(
+                {"error": "사용자 정보가 존재하지 않습니다."}, status=HTTP_400_BAD_REQUEST
+            )
+
+
+class MarketingInformation(APIView):
+    def get(self, request):
+        user = request.user
+
+        data = {"marketing_notification_alloweds": user.marketing_notification_allowed}
+
+        return Response(data, status=HTTP_200_OK)
+
+    def put(self, request):
+        user = request.user
+
+        if user.marketing_notification_allowed == True:
+            user.marketing_notification_allowed = False
+        else:
+            user.marketing_notification_allowed = True
+        user.save()
+
+        return Response(user.marketing_notification_allowed, status=HTTP_200_OK)
+
+
+class UpdateProfile(APIView):
+    def post(self, request):
+        user = request.user
+        # print(user, user.user_uuid)
+        image_url = request.query_params.get("profile_image_url", None)
+
+        # if not image_url:
+        #     return Response({"error": "이미지 주소는 필수임"}, status=HTTP_400_BAD_REQUEST)
+
+        if user.profile_image_url:
+            url = user.profile_image_url
+            parsed_url = urlparse(url)
+            image_id = parsed_url.path.strip("/").split("/")[-2]
+
+            # Call cloudflare API for getting the upload URL
+            url = f"https://api.cloudflare.com/client/v4/accounts/{settings.CF_ID}/images/v1/{image_id}"
+            url_request = requests.delete(
+                url, headers={"Authorization": f"Bearer {settings.CF_TOKEN}"}
+            )
+
+        user.profile_image_url = image_url
+        user.save()
+
+        return Response(status=HTTP_200_OK)
+
+
+class Logout(APIView):
+    # permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        return Response(status=HTTP_200_OK)
+
+
+class UpdateNickname(APIView):
+    def put(self, request):
+        user = request.user
+        new_nick_name = request.data.get("nick_name", None)
+
+        if not new_nick_name:
+            return Response({"error": "nick_name은 필수임"}, status=HTTP_400_BAD_REQUEST)
+
+        try:
+            user.nick_name = new_nick_name
+            user.save()
+        except IntegrityError:
+            return Response({"error": "nick_name이 중복됨"}, status=HTTP_400_BAD_REQUEST)
+
+        return Response(status=HTTP_200_OK)
+
+
+class CheckNickname(APIView):
+    def get(self, request):
+        nick_name = request.query_params.get("nick_name", None)
+
+        if not nick_name:
+            return Response({"error": "nick_name은 필수임"}, status=HTTP_400_BAD_REQUEST)
+
+        if CustomUser.objects.filter(nick_name=nick_name).exists():
+            return Response({"error": "nick_name이 중복됨"}, status=HTTP_400_BAD_REQUEST)
+
+        return Response(status=HTTP_200_OK)
+
+
+class UpdateFCMToken(APIView):
+
+    """API for updating user's FCM Token
+
+    Keyword arguments:
+    argument -- description
+    Return: status:200 ok or 400 bad
+    """
+
+    def put(self, request):
+        user = request.user
+
+        fcm_token = request.data.get("fcm_token", None)
+
+        if not fcm_token:
+            return Response({"error": "FCM token은 필수임"}, status=HTTP_400_BAD_REQUEST)
+
+        user.fcm_token = fcm_token
+        user.save()
+
+        return Response(status=HTTP_200_OK)

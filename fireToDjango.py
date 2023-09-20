@@ -83,24 +83,6 @@ def migrate_user_data():
         if CustomUser.objects.filter(phone_number=data["phoneNumber"]).exists():
             continue
 
-        # keys = data.keys()
-        # print(f"No.[{count}]", data["userId"])
-        # count += 1
-
-        # if "name" not in data.keys():
-        #     print(len(keys), "no name field from data")
-        #     for key in keys:
-        #         print(key, end=" ")
-        #     print()
-        #     print()
-        #     continue
-
-        # print(len(keys), f"{data['name']}")
-        # for key in keys:
-        #     print(key, end=" ")
-        # print()
-        # print()
-
         if "name" not in data.keys():
             data["name"] = ""
 
@@ -121,7 +103,11 @@ def migrate_user_data():
         if data["phoneNumber"] is None:
             data["phoneNumber"] = "000-0000-0000"
 
-        if data["userType"] is None or data["userType"] == "own":
+        if (
+            data["userType"] is None
+            or data["userType"] == "own"
+            or data["userType"] == ""
+        ):
             data["userType"] = "local"
 
         if len(data["nickName"]) > 10:

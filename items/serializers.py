@@ -45,7 +45,7 @@ class FixedPriceItemListWishSerializer(ModelSerializer):
         request = self.context["request"]
 
         return Wishlist.objects.filter(
-            user_id=request.user.get("user_id"),
+            user=request.user,
             fixed_price_items__pk=item.pk,
         ).exists()
 
@@ -90,7 +90,7 @@ class FixedPriceItemListSerializer(ModelSerializer):
         request = self.context["request"]
 
         return Wishlist.objects.filter(
-            user_id=request.user.get("user_id"),
+            user=request.user,
             fixed_price_items__pk=item.pk,
         ).exists()
 
@@ -111,7 +111,7 @@ class FixedPriceItemDetailSerializer(ModelSerializer):
     def get_is_liked(self, item):
         request = self.context["request"]
         return Wishlist.objects.filter(
-            user_id=request.user.get("uid"),
+            user=request.user,
             fixed_price_items__pk=item.pk,
         ).exists()
 
@@ -166,7 +166,7 @@ class AuctionItemListWishSerializer(ModelSerializer):
         request = self.context["request"]
 
         return Wishlist.objects.filter(
-            user_id=request.user.get("user_id"),
+            user=request.user,
             auction_items__pk=auction_item.pk,
         ).exists()
 
@@ -215,7 +215,7 @@ class AuctionItemListSerializer(ModelSerializer):
     def get_is_liked(self, item):
         request = self.context["request"]
         return Wishlist.objects.filter(
-            user_id=request.user.get("user_id"),
+            user=request.user,
             auction_items__pk=item.pk,
         ).exists()
 
@@ -241,7 +241,7 @@ class AuctionItemDetailSerializer(ModelSerializer):
         request = self.context["request"]
 
         return Wishlist.objects.filter(
-            user_id=request.user.get("uid"),
+            user=request.user,
             auction_items__pk=auction_item.pk,
         ).exists()
 

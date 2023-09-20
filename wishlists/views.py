@@ -37,9 +37,7 @@ class Wishlists(APIView):
         start = (page - 1) * page_size
         end = start + page_size
 
-        all_wishilists = Wishlist.objects.filter(user_id=request.user.get("uid"))[
-            start:end
-        ]
+        all_wishilists = Wishlist.objects.filter(user=request.user)[start:end]
         serializer = WishlistSerializer(
             all_wishilists,
             many=True,
@@ -60,7 +58,7 @@ class Wishlists(APIView):
         serializer = WishlistSerializer(data=request.data)
 
         if serializer.is_valid():
-            wishlist = serializer.save(user_id=request.user.get("uid"))
+            wishlist = serializer.save(user=request.user)
             serializer = WishlistSerializer(wishlist)
             return Response(serializer.data)
         else:
@@ -90,14 +88,14 @@ class FixedPriceItemWishlistDetail(APIView):
         """
 
         try:
-            return Wishlist.objects.get(user_id=request.user.get("uid"))
+            return Wishlist.objects.get(user=request.user)
         except Wishlist.DoesNotExist:
             serializer = WishlistSerializer(data=request.data)
 
             if serializer.is_valid():
-                wishlist = serializer.save(user_id=request.user.get("uid"))
+                wishlist = serializer.save(user=request.user)
                 serializer = WishlistSerializer(wishlist)
-                return Wishlist.objects.get(user_id=request.user.get("uid"))
+                return Wishlist.objects.get(user=request.user)
             else:
                 return Response(serializer.errors)
 
@@ -150,14 +148,14 @@ class AuctionItemWishlistDetail(APIView):
         """
 
         try:
-            return Wishlist.objects.get(user_id=request.user.get("uid"))
+            return Wishlist.objects.get(user=request.user)
         except Wishlist.DoesNotExist:
             serializer = WishlistSerializer(data=request.data)
 
             if serializer.is_valid():
-                wishlist = serializer.save(user_id=request.user.get("uid"))
+                wishlist = serializer.save(user=request.user)
                 serializer = WishlistSerializer(wishlist)
-                return Wishlist.objects.get(user_id=request.user.get("uid"))
+                return Wishlist.objects.get(user=request.user)
             else:
                 return Response(serializer.errors)
 
@@ -214,7 +212,7 @@ class FixedPriceItemWishlistToggle(APIView):
     # permission_classes = [IsAuthenticated]
     # pagination_class = PageNumberPagination
 
-    def get_wishlist(self, user_id):
+    def get_wishlist(self, user):
         """returning the object of a wishlist making a query by checking pk and user
 
         Keyword arguments:
@@ -224,7 +222,7 @@ class FixedPriceItemWishlistToggle(APIView):
         """
 
         try:
-            return Wishlist.objects.get(user_id=user_id)
+            return Wishlist.objects.get(user=user)
         except Wishlist.DoesNotExist:
             raise NotFound
 
@@ -251,7 +249,7 @@ class FixedPriceItemWishlistToggle(APIView):
         Return: the serialized data of the wishlist with 'the pk & the user' which is UPDATED
         """
 
-        wishlist = self.get_wishlist(request.user.get("uid"))
+        wishlist = self.get_wishlist(request.user)
         item = self.get_item(item_pk)
 
         print(wishlist.fixed_price_items)
@@ -278,7 +276,7 @@ class AuctionItemWishlistToggle(APIView):
     # permission_classes = [IsAuthenticated]
     # pagination_class = PageNumberPagination
 
-    def get_wishlist(self, user_id):
+    def get_wishlist(self, user):
         """returning the object of a wishlist making a query by checking pk and user
 
         Keyword arguments:
@@ -288,7 +286,7 @@ class AuctionItemWishlistToggle(APIView):
         """
 
         try:
-            return Wishlist.objects.get(user_id=user_id)
+            return Wishlist.objects.get(user=user)
         except Wishlist.DoesNotExist:
             raise NotFound
 
@@ -315,7 +313,7 @@ class AuctionItemWishlistToggle(APIView):
         Return: the serialized data of the wishlist with 'the pk & the user' which is UPDATED
         """
 
-        wishlist = self.get_wishlist(request.user.get("uid"))
+        wishlist = self.get_wishlist(request.user)
         item = self.get_item(item_pk)
 
         if wishlist.auction_items.filter(item_uuid=item_pk).exists():

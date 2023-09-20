@@ -1,3 +1,4 @@
+from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken
 from users.models import CustomUser
@@ -21,4 +22,4 @@ class CustomJWTAuthentication(JWTAuthentication):
                         "Authentication Failed": "No user found with provied phone_number."
                     }
                 )
-        return None
+        raise InvalidToken({"Authentication Failed": "A phone number is necessary."})

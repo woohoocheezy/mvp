@@ -16,7 +16,7 @@ class MakeBidding(APIView):
             raise NotFound
 
     def post(self, request, item_pk):
-        user_id = request.user.get("uid")
+        user_id = request.user.user_uuid
         auction_item = self.get_auction_item(item_pk)
 
         # print(auction_item.deadline)
@@ -33,7 +33,7 @@ class MakeBidding(APIView):
             raise ValidationError("최저가보다 낮은 입찰가임")
 
         data = request.data
-        data["user_id"] = user_id
+        data["user"] = user_id
         data["auction_item"] = item_pk
 
         # print(data["auction_item"])

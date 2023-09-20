@@ -16,12 +16,13 @@ from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.exceptions import (
     ParseError,
     NotFound,
+    PermissionDenied,
 )
-
-# from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from config.settings import PAGE_SIZE
 from photos.serializers import PhotoSerializer
+from users.models import CustomUser
 from .models import FixedPriceItem, AuctionItem
 from .serializers import (
     FixedPriceItemListSerializer,
@@ -161,6 +162,7 @@ class FixedPriceItems(APIView):
         locations = request.query_params.getlist("location")
         """
 
+        """
         if search_query or categories or used_years or locations:
             from stats.models import (
                 SearchStats,
@@ -193,15 +195,18 @@ class FixedPriceItems(APIView):
 
             # 3. Save the SearchStats instance.
             search_stat.save()
+        """
 
         return Response(serializer.data)
 
     def post(self, request):
+        print(request.data.keys())
+        request.data["user"] = request.user.user_uuid
         serializer = FixedPriceItemDetailSerializer(
             data=request.data,
             context={"request": request},
         )
-        # print(request.user.get("uid"))
+        print(request.user)
         # serializer.user_id = request.user.get("uid")
 
         # print(request.data.get("photos[0]"))
@@ -215,8 +220,7 @@ class FixedPriceItems(APIView):
             #     raise ParseError("user_id is requried")
 
             with transaction.atomic():
-                serializer.pho = request.user.get("uid")
-                item = serializer.save()
+                item = serializer.save(user=request.user)
                 # print(item.pk)
                 # print(request.data.get("photos"))
 
@@ -344,6 +348,10 @@ class FixedPriceItemDetail(APIView):
 
 
 class FixedPriceItemPurchase(APIView):
+    """A view for changing 'is_sold' status"""
+
+    permission_classes = [IsAuthenticated]
+
     def get_object(self, pk):
         try:
             return FixedPriceItem.objects.get(pk=pk)
@@ -353,18 +361,23 @@ class FixedPriceItemPurchase(APIView):
 
     def put(self, request, pk):
         item = self.get_object(pk)
+        data = request.data.copy()
 
-        print(request.data.get("buy_uid"))
+        # print(request.data.get("buy_uid"))
+        if item.user != request.user:
+            raise PermissionDenied(detail="해당 User는 수정 권한이 없음")
 
         if item.is_sold == True:
             item.is_sold = False
-            item.buy_user_id = ""
+            data["buy_user"] = None
+            item.buy_user = None
+            # print(item.buy_user)
+
         else:
             item.is_sold = True
-            item.buy_user_id = request.data.get("buy_uid")
 
         serializer = FixedPriceItemDetailSerializer(
-            item, data=request.data, context={"request": request}, partial=True
+            item, data=data, context={"request": request}, partial=True
         )
 
         if serializer.is_valid():
@@ -532,6 +545,7 @@ class AuctionItems(APIView):
         locations = request.query_params.getlist("location")
         """
 
+        """
         if search_query or categories or used_years or locations:
             from stats.models import (
                 SearchStats,
@@ -564,10 +578,12 @@ class AuctionItems(APIView):
 
             # 3. Save the SearchStats instance.
             search_stat.save()
+        """
 
         return Response(serializer.data)
 
     def post(self, request):
+        request.data["user"] = request.user.user_uuid
         serializer = AuctionItemDetailSerializer(
             data=request.data,
             context={"request": request},
@@ -586,8 +602,7 @@ class AuctionItems(APIView):
             #     raise ParseError("user_id is requried")
 
             with transaction.atomic():
-                serializer.pho = request.user.get("uid")
-                item = serializer.save()
+                item = serializer.save(user=request.user)
                 # print(item.pk)
                 # print(request.data.get("photos"))
 
@@ -692,6 +707,10 @@ class AuctionItemDetail(APIView):
 
 
 class AuctionItemPurchase(APIView):
+    """A view for changing 'is_sold' status"""
+
+    permission_classes = [IsAuthenticated]
+
     def get_object(self, pk):
         try:
             return AuctionItem.objects.get(pk=pk)
@@ -701,18 +720,21 @@ class AuctionItemPurchase(APIView):
 
     def put(self, request, pk):
         item = self.get_object(pk)
+        data = request.data.copy()
 
-        print(request.data.get("buy_uid"))
+        # print(request.data.get("buy_uid"))
+        if item.user != request.user:
+            raise PermissionDenied(detail="해당 User는 수정 권한이 없음")
 
         if item.is_sold is True:
             item.is_sold = False
-            item.buy_user_id = ""
+            data["buy_user"] = None
+            item.buy_user = None
         else:
             item.is_sold = True
-            item.buy_user_id = request.data.get("buy_uid")
 
         serializer = AuctionItemDetailSerializer(
-            item, data=request.data, context={"request": request}, partial=True
+            item, data=data, context={"request": request}, partial=True
         )
 
         if serializer.is_valid():

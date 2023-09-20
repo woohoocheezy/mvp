@@ -32,7 +32,7 @@ class CustomUser(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True,
     )
-    fcm_token = models.TextField(null=True, blank=True)
+    fcm_token = models.TextField(null=True, blank=True)  # null, blank 삭제 필요
     nick_name = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=13)
     birth_date = models.DateField()
