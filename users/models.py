@@ -25,7 +25,9 @@ class CustomUser(models.Model):
     user_uuid = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
     )
-    chat_notification_allowed = models.BooleanField(default=True)
+    chat_notification_allowed = models.BooleanField(
+        default=True
+    )  # push_notification_allowed로 이름 변경 고민해볼 것
     marketing_notification_allowed = models.BooleanField(default=True)
     is_certificated = models.BooleanField(default=False)
     create_at = models.DateTimeField(auto_now_add=True)
@@ -59,6 +61,8 @@ class CustomUser(models.Model):
         related_query_name="customuser",
         related_name="customuser_set",
     )
+
+    blocked_users = models.ManyToManyField("self", symmetrical=True, blank=True)
 
     USERNAME_FIELD = "phone_number"
     REQUIRED_FIELDS = []

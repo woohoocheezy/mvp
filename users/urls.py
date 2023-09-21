@@ -15,6 +15,10 @@ from .views import (
     UserInformation,
     MarketingInformation,
     UpdateProfile,
+    PushNotification,
+    BlockUser,
+    UnBlockUser,
+    BlockedUserList,
 )
 
 urlpatterns = [
@@ -33,4 +37,8 @@ urlpatterns = [
     path("informations", UserInformation.as_view(), name="informations"),
     path("marketing", MarketingInformation.as_view(), name="marketing"),
     path("profile", UpdateProfile.as_view(), name="profile"),
+    path("chat-notification", PushNotification.as_view(), name="chat_notification"),
+    path("<uuid:pk>/block", BlockUser.as_view(), name="block_user"),
+    path("<uuid:pk>/unblock", UnBlockUser.as_view(), name="unblock_user"),
+    path("blocked", BlockedUserList.as_view(), name="blocked_user_list"),
 ]

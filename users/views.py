@@ -4,7 +4,7 @@ from django.db import IntegrityError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import ParseError, PermissionDenied
-from rest_framework.generics import RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.status import (
     HTTP_200_OK,
@@ -22,7 +22,7 @@ from items.serializers import (
     UserSoldSerializer,
 )
 from .models import CustomUser
-from .serializers import CustomUserSerializer
+from .serializers import CustomUserSerializer, BlockedUserSerailizer
 from authentication.views import CustomTokenObtainPairSerializer
 
 
@@ -294,6 +294,10 @@ class UserSoldList(APIView):
 
 class UserCreate(APIView):
     def post(self, request):
+        # phone_number = request.data.get("phone_number")
+        # if not phone_number:
+        #     raise ParseError
+
         serializer = CustomUserSerializer(data=request.data)
         if serializer.is_valid():
             random_username = uuid.uuid4().hex[:10]
@@ -343,7 +347,7 @@ class MarketingInformation(APIView):
     def get(self, request):
         user = request.user
 
-        data = {"marketing_notification_alloweds": user.marketing_notification_allowed}
+        data = {"marketing_notification_allowed": user.marketing_notification_allowed}
 
         return Response(data, status=HTTP_200_OK)
 
@@ -357,6 +361,26 @@ class MarketingInformation(APIView):
         user.save()
 
         return Response(user.marketing_notification_allowed, status=HTTP_200_OK)
+
+
+class PushNotification(APIView):
+    def get(self, request):
+        user = request.user
+
+        data = {"chat_notification_allowed": user.chat_notification_allowed}
+
+        return Response(data, status=HTTP_200_OK)
+
+    def put(self, request):
+        user = request.user
+
+        if user.chat_notification_allowed == True:
+            user.chat_notification_allowed = False
+        else:
+            user.chat_notification_allowed = True
+        user.save()
+
+        return Response(user.chat_notification_allowed, status=HTTP_200_OK)
 
 
 class UpdateProfile(APIView):
@@ -443,3 +467,28 @@ class UpdateFCMToken(APIView):
         user.save()
 
         return Response(status=HTTP_200_OK)
+
+
+class BlockUser(APIView):
+    def post(self, request, pk):
+        user_to_block = CustomUser.objects.get(user_uuid=pk)
+
+        request.user.blocked_users.add(user_to_block)
+
+        return Response(status=HTTP_204_NO_CONTENT)
+
+
+class UnBlockUser(APIView):
+    def post(self, request, pk):
+        user_to_unblock = CustomUser.objects.get(user_uuid=pk)
+
+        request.user.blocked_users.remove(user_to_unblock)
+
+        return Response(status=HTTP_204_NO_CONTENT)
+
+
+class BlockedUserList(ListAPIView):
+    serializer_class = BlockedUserSerailizer
+
+    def get_queryset(self):
+        return self.request.user.blocked_users.all()
