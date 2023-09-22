@@ -102,6 +102,8 @@ class FixedPriceItemDetailSerializer(ModelSerializer):
     photos = SerializerMethodField()
     is_liked = SerializerMethodField()
     count_liked = SerializerMethodField()
+    user_profile = SerializerMethodField()
+    user_nickname = SerializerMethodField()
 
     class Meta:
         model = FixedPriceItem
@@ -126,6 +128,12 @@ class FixedPriceItemDetailSerializer(ModelSerializer):
 
     def get_count_liked(self, item):
         return Wishlist.objects.filter(fixed_price_items__pk=item.pk).count()
+
+    def get_user_profile(self, item):
+        return item.user.profile_image_url
+
+    def get_user_nickname(self, item):
+        return item.user.nick_name
 
 
 class AuctionItemListWishSerializer(ModelSerializer):
@@ -231,6 +239,8 @@ class AuctionItemDetailSerializer(ModelSerializer):
     is_liked = SerializerMethodField()
     count_liked = SerializerMethodField()
     count_bids = SerializerMethodField()
+    user_profile = SerializerMethodField()
+    user_nickname = SerializerMethodField()
 
     class Meta:
         model = AuctionItem
@@ -259,6 +269,12 @@ class AuctionItemDetailSerializer(ModelSerializer):
 
     def get_count_bids(self, auction_item):
         return auction_item.biddings.count()
+
+    def get_user_profile(self, item):
+        return item.user.profile_image_url
+
+    def get_user_nickname(self, item):
+        return item.user.nick_name
 
 
 class UserSoldSerializer(Serializer):

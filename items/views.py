@@ -52,14 +52,12 @@ class FixedPriceItems(APIView):
         /items/?location=value
         /items/?search=value"""
 
-        # info = f'METHOD: {request.method}\n'
-        # info += f'URL: {request.get_full_path()}\n'
-        # info += f'GET: {request.GET}\n'
-        # info += f'POST: {request.POST}\n'
-        # info += f'COOKIES: {request.COOKIES}\n'
-        # info += f'META: {request.META}\n'
-
-        # print(info)
+        user = request.user
+        # blocked_user_ids = user.blocked_users.all()
+        # print(blocked_user_ids)
+        # blocked_user_ids = user.blocked_users.values_list("user_uuid", flat=True)
+        # print(blocked_user_ids)
+        blocked_user_ids = user.blocked_users.all().values_list("user_uuid", flat=True)
 
         try:
             page = int(request.query_params.get("page", 1))
@@ -69,18 +67,13 @@ class FixedPriceItems(APIView):
         page_size = PAGE_SIZE
         start = (page - 1) * page_size
         end = start + page_size
-        # print(f"request.query_params : {request.query_params}")
+
         search_query = request.query_params.get("search", "")
-        # category = request.query_params.get("category")
         categories = request.query_params.getlist("category")
-        # used_years = request.query_params.get("used_years")
         used_years = request.query_params.getlist("used_years")
         min_price = request.query_params.get("min_price")
         max_price = request.query_params.get("max_price")
-        # location = request.query_params.get("location")
         locations = request.query_params.getlist("location")
-        # print(f"search_query : {search_query}")
-        # print(used_years)
 
         query = Q()
         query &= Q(is_sold=False, is_deleted=False)
@@ -88,8 +81,6 @@ class FixedPriceItems(APIView):
             query &= Q(item_name__icontains=search_query) | Q(
                 description__icontains=search_query
             )
-        # if category:
-        #     query &= Q(category__icontains=category)
         if categories:
             query &= Q(category__in=categories)
         if used_years:
@@ -98,49 +89,13 @@ class FixedPriceItems(APIView):
             query &= Q(price__gte=min_price)
         if max_price:
             query &= Q(price__lte=max_price)
-        # if location:
-        #     query &= Q(location__icontains=location)
         if locations:
             query &= Q(location__in=locations)
-
-        # if search_query:
-        #     all_items = Item.objects.filter(
-        #         Q(item_name__icontains=search_query)
-        #         | Q(item_description__icontains=search_query)
-        #     )[start:end]
-        # else:
-        #     all_items = Item.objects.all()[start:end]
-
-        """test"""
-        # test1 = Item.objects.filter(query).filter("dday_date").order_by("dday_date","-created_at")
-        # test2 = Item.objects.filter(query).filter().order_by("-created_at")
-
-        # all_items = test1 + test2
-        # all_items = all_items[start:end]
-        """test end"""
-
-        # now = timezone.now().date()
-
-        # 적용되던 코드 very important
-        # all_items = Item.objects.filter(query).order_by("dday_date","-created_at")[start:end]
 
         # sorting items in order by created condition
         all_items = (
             FixedPriceItem.objects.filter(query)
-            # .annotate(
-            #     order_priority=Case(
-            #         When(dday_date__lte=now, then=Value(1)),
-            #         default=Value(0),
-            #         output_field=IntegerField(),
-            #     ),
-            #     # Use dday_date if dday_date is today or later, otherwise use now.
-            #     custom_date=Case(
-            #         When(dday_date__gt=now, then=F("dday_date")),
-            #         default=Value(now),
-            #         output_field=DateField(),
-            #     ),
-            # )
-            # .order_by("order_priority", "custom_date", "-created_at")
+            .exclude(user__in=blocked_user_ids)
             .order_by("-created_at")
         )[start:end]
 
@@ -149,9 +104,6 @@ class FixedPriceItems(APIView):
             many=True,
             context={"request": request},
         )
-        # print(serializer.data)
-        # print("hi")
-        # print(request.user['user_id'])
 
         """
         from stats.models import SearchStats
@@ -200,34 +152,18 @@ class FixedPriceItems(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        print(request.data.keys())
         request.data["user"] = request.user.user_uuid
         serializer = FixedPriceItemDetailSerializer(
             data=request.data,
             context={"request": request},
         )
-        print(request.user)
-        # serializer.user_id = request.user.get("uid")
-
-        # print(request.data.get("photos[0]"))
-        # print()
-        # print(type((request.data.get("photos[1]"))))
 
         if serializer.is_valid():
-            # user_pk = request.data.get("user_id")
-
-            # if not user_pk:
-            #     raise ParseError("user_id is requried")
-
             with transaction.atomic():
                 item = serializer.save(user=request.user)
-                # print(item.pk)
-                # print(request.data.get("photos"))
 
                 photo_count = 0
                 for photo_file in request.data.get("photos"):
-                    # print(type(photo_file), photo_file)
-
                     serializer = PhotoSerializer(data=photo_file)
 
                     if serializer.is_valid():
@@ -249,29 +185,6 @@ class FixedPriceItems(APIView):
                 )
         else:
             return Response(serializer.errors)
-
-        # class ItemPhotos(APIView):
-        #     def get_object(self, pk):
-        #         try:
-        #             return Item.objects.get(pk=pk)
-        #         except Item.DoesNotExist:
-        #             raise NotFound
-
-        #     def post(self, request, pk):
-        #         print(request.data)
-
-        """Doesn't work"""
-        # item = self.get_object(pk)
-
-        # serializer = PhotoSerializer(data=request.data)
-        # # print(request.data)
-
-        # if serializer.is_valid():
-        #     photo = serializer.save(item=item)
-        #     serializer = PhotoSerializer(photo)
-        #     return Response(serializer.data)
-        # else:
-        #     return Response(serializer.errors)
 
 
 class FixedPriceItemDetail(APIView):
@@ -300,8 +213,6 @@ class FixedPriceItemDetail(APIView):
         item = self.get_object(pk)
 
         data = request.data.copy()  # Create a mutable copy of request data
-        # if "dday_date" in data:
-        #     data.pop("dday_date")  # Remove 'd-day' from the data if it exists
 
         serializer = FixedPriceItemDetailSerializer(
             item,
@@ -310,11 +221,6 @@ class FixedPriceItemDetail(APIView):
         )
 
         if serializer.is_valid():
-            # user_pk = request.data.get("user_id")
-
-            # if not user_pk:
-            #     raise ParseError("user_id is requried")
-
             with transaction.atomic():
                 item = serializer.save()
 
@@ -363,7 +269,6 @@ class FixedPriceItemPurchase(APIView):
         item = self.get_object(pk)
         data = request.data.copy()
 
-        # print(request.data.get("buy_uid"))
         if item.user != request.user:
             raise PermissionDenied(detail="해당 User는 수정 권한이 없음")
 
@@ -371,7 +276,6 @@ class FixedPriceItemPurchase(APIView):
             item.is_sold = False
             data["buy_user"] = None
             item.buy_user = None
-            # print(item.buy_user)
 
         else:
             item.is_sold = True
@@ -435,14 +339,8 @@ class AuctionItems(APIView):
         /items/?location=value
         /items/?search=value"""
 
-        # info = f'METHOD: {request.method}\n'
-        # info += f'URL: {request.get_full_path()}\n'
-        # info += f'GET: {request.GET}\n'
-        # info += f'POST: {request.POST}\n'
-        # info += f'COOKIES: {request.COOKIES}\n'
-        # info += f'META: {request.META}\n'
-
-        # print(info)
+        user = request.user
+        blocked_user_ids = user.blocked_users.all().value_list("user_uuid", flat=True)
 
         try:
             page = int(request.query_params.get("page", 1))
@@ -452,18 +350,12 @@ class AuctionItems(APIView):
         page_size = PAGE_SIZE
         start = (page - 1) * page_size
         end = start + page_size
-        # print(f"request.query_params : {request.query_params}")
         search_query = request.query_params.get("search", "")
-        # category = request.query_params.get("category")
         categories = request.query_params.getlist("category")
-        # used_years = request.query_params.get("used_years")
         used_years = request.query_params.getlist("used_years")
         min_price = request.query_params.get("min_price")
         max_price = request.query_params.get("max_price")
-        # location = request.query_params.get("location")
         locations = request.query_params.getlist("location")
-        # print(f"search_query : {search_query}")
-        # print(used_years)
 
         query = Q()
         query &= Q(is_sold=False, is_deleted=False, is_overdue=False)
@@ -471,8 +363,6 @@ class AuctionItems(APIView):
             query &= Q(item_name__icontains=search_query) | Q(
                 description__icontains=search_query
             )
-        # if category:
-        #     query &= Q(category__icontains=category)
         if categories:
             query &= Q(category__in=categories)
         if used_years:
@@ -481,49 +371,13 @@ class AuctionItems(APIView):
             query &= Q(lowest_price__gte=min_price)
         if max_price:
             query &= Q(lowest_price__lte=max_price)
-        # if location:
-        #     query &= Q(location__icontains=location)
         if locations:
             query &= Q(location__in=locations)
-
-        # if search_query:
-        #     all_items = Item.objects.filter(
-        #         Q(item_name__icontains=search_query)
-        #         | Q(item_description__icontains=search_query)
-        #     )[start:end]
-        # else:
-        #     all_items = Item.objects.all()[start:end]
-
-        """test"""
-        # test1 = Item.objects.filter(query).filter("dday_date").order_by("dday_date","-created_at")
-        # test2 = Item.objects.filter(query).filter().order_by("-created_at")
-
-        # all_items = test1 + test2
-        # all_items = all_items[start:end]
-        """test end"""
-
-        # now = timezone.now().date()
-
-        # 적용되던 코드 very important
-        # all_items = Item.objects.filter(query).order_by("dday_date","-created_at")[start:end]
 
         # sorting items in order by created condition
         all_items = (
             AuctionItem.objects.filter(query)
-            # .annotate(
-            #     order_priority=Case(
-            #         When(dday_date__lte=now, then=Value(1)),
-            #         default=Value(0),
-            #         output_field=IntegerField(),
-            #     ),
-            #     # Use dday_date if dday_date is today or later, otherwise use now.
-            #     custom_date=Case(
-            #         When(dday_date__gt=now, then=F("dday_date")),
-            #         default=Value(now),
-            #         output_field=DateField(),
-            #     ),
-            # )
-            # .order_by("order_priority", "custom_date", "-created_at")
+            .exclude(user__in=blocked_user_ids)
             .order_by("-created_at")
         )[start:end]
 
@@ -532,9 +386,6 @@ class AuctionItems(APIView):
             many=True,
             context={"request": request},
         )
-        # print(serializer.data)
-        # print("hi")
-        # print(request.user['user_id'])
 
         """
         from stats.models import SearchStats
@@ -588,28 +439,13 @@ class AuctionItems(APIView):
             data=request.data,
             context={"request": request},
         )
-        # print(request.user.get("uid"))
-        # serializer.user_id = request.user.get("uid")
-
-        # print(request.data.get("photos[0]"))
-        # print()
-        # print(type((request.data.get("photos[1]"))))
 
         if serializer.is_valid():
-            # user_pk = request.data.get("user_id")
-
-            # if not user_pk:
-            #     raise ParseError("user_id is requried")
-
             with transaction.atomic():
                 item = serializer.save(user=request.user)
-                # print(item.pk)
-                # print(request.data.get("photos"))
 
                 photo_count = 0
                 for photo_file in request.data.get("photos"):
-                    # print(type(photo_file), photo_file)
-
                     serializer = PhotoSerializer(data=photo_file)
 
                     if serializer.is_valid():
@@ -659,8 +495,6 @@ class AuctionItemDetail(APIView):
         item = self.get_object(pk)
 
         data = request.data.copy()  # Create a mutable copy of request data
-        # if "dday_date" in data:
-        #     data.pop("dday_date")  # Remove 'd-day' from the data if it exists
 
         serializer = AuctionItemDetailSerializer(
             item,
@@ -669,11 +503,6 @@ class AuctionItemDetail(APIView):
         )
 
         if serializer.is_valid():
-            # user_pk = request.data.get("user_id")
-
-            # if not user_pk:
-            #     raise ParseError("user_id is requried")
-
             with transaction.atomic():
                 item = serializer.save()
 
@@ -722,7 +551,6 @@ class AuctionItemPurchase(APIView):
         item = self.get_object(pk)
         data = request.data.copy()
 
-        # print(request.data.get("buy_uid"))
         if item.user != request.user:
             raise PermissionDenied(detail="해당 User는 수정 권한이 없음")
 
