@@ -244,14 +244,16 @@ class UserSoldList(APIView):
             "user_uuid", flat=True
         )
 
+        print(blocked_user_ids)
+
         queryset = list(
             FixedPriceItem.objects.filter(
                 user=request.user, is_sold=True, is_deleted=False
-            ).exclude(buy_user__user_uuid_in=blocked_user_ids)
+            ).exclude(buy_user__in=blocked_user_ids)
         ) + list(
             AuctionItem.objects.filter(
                 user=request.user, is_sold=True, is_deleted=False
-            ).exclude(buy_user__user_uuid_in=blocked_user_ids)
+            ).exclude(buy_user__in=blocked_user_ids)
         )
         queryset.sort(key=lambda x: x.created_at, reverse=True)
         paginated_querset = queryset[start:end]
