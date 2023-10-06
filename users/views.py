@@ -341,6 +341,8 @@ class UserInformation(APIView):
             data = {
                 "phone_number": custom_user.phone_number,
                 "user_type": custom_user.user_type,
+                "profile_image_url": custom_user.profile_image_url,
+                "nick_name": custom_user.nick_name,
             }
             return Response(data, status=HTTP_200_OK)
         except CustomUser.DoesNotExist:
