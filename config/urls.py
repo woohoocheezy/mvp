@@ -25,4 +25,5 @@ urlpatterns = [
     path("api/mvp/wishlists/", include("wishlists.urls")),
     path("api/mvp/biddings/", include("biddings.urls")),
     path("api/mvp/tokens/", include("authentication.urls")),
+    path("api/mvp/chats/", include("chats.urls")),
 ]

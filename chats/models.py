@@ -37,13 +37,18 @@ class Chat(CommonModel):
     )
     object_id = models.UUIDField()
 
-    product = GenericForeignKey(
+    item = GenericForeignKey(
         "content_type",
         "object_id",
     )
 
 
 class Message(CommonModel):
+    class MessageTypeChoices(models.TextChoices):
+        TEXT = ("text", "Text")
+        IMAGE = ("image", "Image")
+        AUCTION_NOT_SELL = ("auctionNotSell", "Auction Not Sell")
+
     message_uuid = models.UUIDField(
         primary_key=True,
         default=uuid4,
@@ -53,23 +58,31 @@ class Message(CommonModel):
 
     is_read = models.BooleanField(default=False)
     text = models.TextField()
+    type = models.CharField(
+        max_length=20, choices=MessageTypeChoices.choices, null=False, default="text"
+    )
+    image = models.URLField(null=True)
     time_sent = models.DateTimeField(auto_now_add=True)
 
-    # Foreign key relationship with the User model
+    # Foreign key relationship with the User model about sender and receiver
     sender_user_id = models.ForeignKey(
         "users.CustomUser",
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="sent_messages",
+        null=True,
     )
 
     receiver_user_id = models.ForeignKey(
         "users.CustomUser",
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="recieved_messages",
-    )
+        null=True,
+    )  # The fcm token of reciver can be obtained by ORM of CustomUser
 
-    chat_room = models.ForeignKey(
+    # Foreign key relationship with the Chat model
+    chat = models.ForeignKey(
         Chat,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="messages",
+        null=True,
     )

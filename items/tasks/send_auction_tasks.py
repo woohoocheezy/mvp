@@ -26,7 +26,7 @@ try:
         auction_items = AuctionItem.objects.filter(deadline=yesterday, is_overdue=True)
 
         # print(len(auction_items))
-        # db = firestore.client()
+        db = firestore.client()
 
         for item in auction_items:
             if item.is_bidded:
@@ -37,7 +37,7 @@ try:
                 ).first()
                 item.winning_bid = highest_bidding.bidding_price
                 item.buy_user_id = highest_bidding.user_id
-                print("highest bidding matched msg sent")
+                # print("highest bidding matched msg sent")
 
                 # print(item, item.user_id)
                 # print(
@@ -45,69 +45,68 @@ try:
                 #     highest_bidding.user_id,
                 # )
 
-
                 # create a chat room on firestore database
-                # doc_ref = db.collection("chat").document()
-
-                # # set data for the chat room document
-                # doc_ref.set(
-                #     {
-                #         "createDate": firestore.SERVER_TIMESTAMP,
-                #         "enteredUserId": [item.user_id, highest_bidding.user_id],
-                #         "lastChat": "경매가 완료되어, 판매자분과 최고 입찰자분이 매칭되었어요!",
-                #         "lastChatDate": firestore.SERVER_TIMESTAMP,
-                #         "productId": str(item.item_uuid),
-                #         "title": item.item_name,
-                #         "userId": [item.user_id, highest_bidding.user_id],
-                #     }
-                # )
-
-            else:
-                # official_account_id = "YfeceAVnL1MKWyd1TjBWYkRHi3l1"
-
-                # user_ref = db.collection("user").document(item.user_id)
-                # user = user_ref.get().to_dict()
-                # print(item.user_id, user)
-
-                # # create a chat room on firestore database
-                # doc_ref = db.collection("chat").document()
+                doc_ref = db.collection("chat").document()
 
                 # set data for the chat room document
-                # doc_ref.set(
-                #     {
-                #         "createDate": firestore.SERVER_TIMESTAMP,
-                #         "enteredUserId": [item.user_id, official_account_id],
-                #         "lastChat": "경매가 완료되었지만, 입찰자가 없어요!",
-                #         "lastChatDate": firestore.SERVER_TIMESTAMP,
-                #         "productId": str(item.item_uuid),
-                #         "title": item.item_name,
-                #         "userId": [item.user_id, official_account_id],
-                #     }
+                doc_ref.set(
+                    {
+                        "createDate": firestore.SERVER_TIMESTAMP,
+                        "enteredUserId": [item.user_id, highest_bidding.user_id],
+                        "lastChat": "경매가 완료되어, 판매자분과 최고 입찰자분이 매칭되었어요!",
+                        "lastChatDate": firestore.SERVER_TIMESTAMP,
+                        "productId": str(item.item_uuid),
+                        "title": item.item_name,
+                        "userId": [item.user_id, highest_bidding.user_id],
+                    }
+                )
+
+            else:
+                official_account_id = "YfeceAVnL1MKWyd1TjBWYkRHi3l1"
+
+                user_ref = db.collection("user").document(item.user_id)
+                user = user_ref.get().to_dict()
+                # print(item.user_id, user)
+
+                # create a chat room on firestore database
+                doc_ref = db.collection("chat").document()
+
+                # set data for the chat room document
+                doc_ref.set(
+                    {
+                        "createDate": firestore.SERVER_TIMESTAMP,
+                        "enteredUserId": [item.user_id, official_account_id],
+                        "lastChat": "경매가 완료되었지만, 입찰자가 없어요!",
+                        "lastChatDate": firestore.SERVER_TIMESTAMP,
+                        "productId": str(item.item_uuid),
+                        "title": item.item_name,
+                        "userId": [item.user_id, official_account_id],
+                    }
                 )
 
                 # create a message on Firestore database
-                # msg_ref = (
-                #     db.collection("chat")
-                #     .document(doc_ref.id)
-                #     .collection("message")
-                #     .document()
-                # )
+                msg_ref = (
+                    db.collection("chat")
+                    .document(doc_ref.id)
+                    .collection("message")
+                    .document()
+                )
 
-                print("no bidding msg sent")
+                # print("no bidding msg sent")
 
                 # set data for the message document
-                # msg_ref.set(
-                #     {
-                #         "isRead": False,
-                #         "receiverId": item.user_id,
-                #         "receiverToken": user["fcmToken"],
-                #         "text": "",
-                #         "time": firestore.SERVER_TIMESTAMP,
-                #         "type": "auctionNotSell",
-                #         "url": "",
-                #         "userId": official_account_id,
-                #     }
-                # )
+                msg_ref.set(
+                    {
+                        "isRead": False,
+                        "receiverId": item.user_id,
+                        "receiverToken": user["fcmToken"],
+                        "text": "",
+                        "time": firestore.SERVER_TIMESTAMP,
+                        "type": "auctionNotSell",
+                        "url": "",
+                        "userId": official_account_id,
+                    }
+                )
 
                 # print("sad")
 
