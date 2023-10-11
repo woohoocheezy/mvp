@@ -64,6 +64,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except ValueError as e:
             if str(e) == "The receiver has left the chat room":
                 logger.error(f"Failed to send a message: {e}")
+
+                await self.send(
+                    text_data=dumps({"error": f"Failed to send message: {e}"})
+                )
             else:
                 raise e
 
@@ -93,11 +97,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def create_message(self, type, sender_user, receiver_user, message):
         from .models import Message
 
+        self.chat.refresh_from_db()
+
         # Check if the receiver is still in the chat room
         if (receiver_user == self.chat.seller and not self.chat.seller_active) or (
             receiver_user == self.chat.buyer and not self.chat.buyer_active
         ):
             raise ValueError("The receiver has left the chat room")
+
+        logger.info(f"{self.chat.seller_active} & {self.chat.buyer_active}")
 
         push_service = FCMNotification(
             api_key=firebase_server_api_key,
