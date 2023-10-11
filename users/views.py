@@ -441,6 +441,21 @@ class UpdateNickname(APIView):
         return Response(status=HTTP_200_OK)
 
 
+class CheckPhoneNumber(APIView):
+    def get(self, request):
+        phone_number = request.query_params.get("phone_number", None)
+
+        if not phone_number:
+            return Response({"error": "phone_number 필수임"}, status=HTTP_400_BAD_REQUEST)
+
+        if CustomUser.objects.filter(phone_number=phone_number).exists():
+            return Response(status=HTTP_200_OK)
+        else:
+            return Response(
+                {"error": "일치하는 phone_number가 존재하지 않음"}, status=HTTP_400_BAD_REQUEST
+            )
+
+
 class CheckNickname(APIView):
     def get(self, request):
         nick_name = request.query_params.get("nick_name", None)

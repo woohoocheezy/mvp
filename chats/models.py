@@ -13,8 +13,8 @@ class Chat(CommonModel):
         unique=True,
     )
 
-    last_chat = models.TextField(null=True, blank=True)
-    last_chat_date = models.DateTimeField(null=True, blank=True)
+    # last_chat = models.TextField(null=True, blank=True) # last_chat can be set on serailizer
+    # last_chat_date = models.DateTimeField(null=True, blank=True) # can be set on serializer too
     title = models.CharField(max_length=255)
 
     # Foreign Key relationship with the User model for seller and buyer
@@ -23,6 +23,9 @@ class Chat(CommonModel):
         on_delete=models.CASCADE,
         related_name="seller_chats",
     )
+
+    seller_active = models.BooleanField(default=False)
+    buyer_active = models.BooleanField(default=False)
 
     buyer = models.ForeignKey(
         "users.CustomUser",

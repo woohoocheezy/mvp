@@ -1,39 +1,44 @@
+from django.db.models import Max
+from django.db.models.functions import Coalesce
 from rest_framework.exceptions import NotFound
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Chat
-from .serializers import ChatCreateSerializer, ChatListSerializer
-from items.models import FixedPriceItem
-from users.models import CustomUser
+from rest_framework.status import HTTP_200_OK
+from config.settings import PAGE_SIZE
+from .models import Chat, Message
+from .serializers import ChatDetailSerializer, ChatListSerializer, MessageSerializer
 
 
-class FixedPriceChat(APIView):
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+class EnterChat(APIView):
     def post(self, request):
-        # user = request.user
-
-        # item_uuid = request.data["item_uuid"]
-        # item = FixedPriceItem.objects.get(item_uuid=item_uuid)
-
-        # seller_id = request.data["user_id"]
-        # seller = CustomUser.objects.get(user_uuid=seller_id)
-
-        # print(user, item, seller)
-
-        # chat, created = ChatSerializer(seller=seller, buyer=user, item=item)
-
-        # print(chat, created)
         data = request.data.copy()
         data["buyer"] = request.user.user_uuid
         data["seller"] = data.pop("user_id")
 
-        print(data, request.data)
+        # print(data, request.data)
 
-        serializer = ChatCreateSerializer(data=data, context={"request": request})
+        serializer = ChatDetailSerializer(data=data, context={"request": request})
 
         if serializer.is_valid():
-            chat = serializer.save()
-            print(chat.chat_uuid)
-            return Response({"chat_uuid": str(chat.chat_uuid)})
+            try:
+                existing_chat = Chat.objects.get(
+                    seller=data["seller"],
+                    buyer=data["buyer"],
+                    object_id=data["item_uuid"],
+                )
+                existing_chat.buyer_active = True
+                existing_chat.save()
+                return Response({"chat_uuid": str(existing_chat.chat_uuid)})
+            except Chat.DoesNotExist:
+                chat = serializer.save()
+                # print(chat.chat_uuid)
+                return Response({"chat_uuid": str(chat.chat_uuid)})
 
         return Response(serializer.errors, status=400)
 
@@ -41,7 +46,13 @@ class FixedPriceChat(APIView):
 class ChatList(APIView):
     def get_chats(self, user):
         try:
-            return Chat.objects.filter(seller=user) | Chat.objects.filter(buyer=user)
+            chats = Chat.objects.filter(
+                seller=user, seller_active=True
+            ) | Chat.objects.filter(buyer=user, buyer_active=True)
+            chats = chats.annotate(
+                last_chat_date=Coalesce(Max("messages__time_sent"), "created_at")
+            ).order_by("-last_chat_date")
+            return chats
         except Chat.DoesNotExist:
             raise NotFound
 
@@ -50,14 +61,67 @@ class ChatList(APIView):
 
         chats = self.get_chats(user)
 
-        serializer = ChatListSerializer(chats, many=True)
+        serializer = ChatListSerializer(
+            chats,
+            many=True,
+            context={"request": request},
+        )
         print(serializer.data)
 
         return Response(serializer.data)
 
 
-# class ChatDetail(APIView):
+class ChatDetail(APIView):
+    def get(self, request, pk):
+        chat = Chat.objects.get(chat_uuid=pk)
 
-#     def get(self, request, uuid):
+        try:
+            page = int(request.query_params.get("page", 1))
+        except ValueError:
+            page = 1
 
-#         uuid =
+        page_size = PAGE_SIZE
+        start = (page - 1) * page_size
+        end = start + page_size
+
+        messages = chat.messages.order_by("-time_sent")[start:end]
+
+        unread_messages = chat.messages.filter(
+            receiver_user_id=request.user, is_read=False
+        )
+
+        for unread_message in unread_messages:
+            unread_message.is_read = True
+            unread_message.save()
+
+        serializer = MessageSerializer(messages, many=True)
+
+        return Response(serializer.data)
+
+
+class LeaveChatRoom(APIView):
+    def get_chat(self, pk):
+        try:
+            return Chat.objects.get(chat_uuid=pk)
+        except Chat.DoesNotExist:
+            raise NotFound
+
+    def post(self, request, pk):
+        user = request.user
+        chat = self.get_chat(pk)
+
+        if chat.seller == user:
+            chat.seller_active = False
+
+        elif chat.buyer == user:
+            chat.buyer_active = False
+        else:
+            return Response({"error": "Invalid user"}, status=400)
+
+        chat.save()
+
+        if not (chat.buyer_active or chat.seller_active):
+            Message.objects.filter(chat=chat).delete()
+            Chat.objects.filter(chat_uuid=chat.chat_uuid).delete()
+
+        return Response(status=HTTP_200_OK)

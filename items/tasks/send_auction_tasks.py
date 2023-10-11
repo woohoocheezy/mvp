@@ -10,9 +10,13 @@ try:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
     setup()
 
+    from django.contrib.contenttypes.models import ContentType
     from datetime import date, timedelta, datetime
+    from pyfcm import FCMNotification
     from items.models import AuctionItem
-    from firebase_admin import firestore
+    from chats.models import Chat, Message
+    from users.models import CustomUser
+    from config.settings import firebase_server_api_key
 
     def send_msg_auction_deadline():
         """create messages to items which the deadline is over today.
@@ -21,14 +25,12 @@ try:
         Return: Nothing
         """
 
-        yesterday = date.today() - timedelta(days=1)
+        yesterday = date.today() - timedelta(days=2)
 
         auction_items = AuctionItem.objects.filter(deadline=yesterday, is_overdue=True)
 
-        # print(len(auction_items))
-        db = firestore.client()
-
         for item in auction_items:
+            # print(item)
             if item.is_bidded:
                 item.is_sold = True
 
@@ -37,78 +39,58 @@ try:
                 ).first()
                 item.winning_bid = highest_bidding.bidding_price
                 item.buy_user_id = highest_bidding.user_id
-                # print("highest bidding matched msg sent")
+                item.save()
 
-                # print(item, item.user_id)
-                # print(
-                #     highest_bidding,
-                #     highest_bidding.user_id,
-                # )
-
-                # create a chat room on firestore database
-                doc_ref = db.collection("chat").document()
-
-                # set data for the chat room document
-                doc_ref.set(
-                    {
-                        "createDate": firestore.SERVER_TIMESTAMP,
-                        "enteredUserId": [item.user_id, highest_bidding.user_id],
-                        "lastChat": "경매가 완료되어, 판매자분과 최고 입찰자분이 매칭되었어요!",
-                        "lastChatDate": firestore.SERVER_TIMESTAMP,
-                        "productId": str(item.item_uuid),
-                        "title": item.item_name,
-                        "userId": [item.user_id, highest_bidding.user_id],
-                    }
+                # create a chat room for seller and the highest bidder
+                content_type = ContentType.objects.get_for_model(item)
+                chat, created = Chat.objects.get_or_create(
+                    seller=item.user,
+                    buyer=highest_bidding.user,
+                    content_type=content_type,
+                    object_id=item.item_uuid,
+                    title=item.item_name,
+                    defaults={
+                        "seller_active": True,
+                        "buyer_active": True,
+                    },
                 )
 
             else:
-                official_account_id = "YfeceAVnL1MKWyd1TjBWYkRHi3l1"
+                official_account_user = CustomUser.objects.get(nick_name="매니저")
 
-                user_ref = db.collection("user").document(item.user_id)
-                user = user_ref.get().to_dict()
-                # print(item.user_id, user)
+                # create a chat room
+                content_type = ContentType.objects.get_for_model(item)
 
-                # create a chat room on firestore database
-                doc_ref = db.collection("chat").document()
-
-                # set data for the chat room document
-                doc_ref.set(
-                    {
-                        "createDate": firestore.SERVER_TIMESTAMP,
-                        "enteredUserId": [item.user_id, official_account_id],
-                        "lastChat": "경매가 완료되었지만, 입찰자가 없어요!",
-                        "lastChatDate": firestore.SERVER_TIMESTAMP,
-                        "productId": str(item.item_uuid),
-                        "title": item.item_name,
-                        "userId": [item.user_id, official_account_id],
-                    }
+                chat, created = Chat.objects.get_or_create(
+                    seller=item.user,
+                    buyer=official_account_user,
+                    content_type=content_type,
+                    object_id=item.item_uuid,
+                    title=item.item_name,
+                    defaults={
+                        "seller_active": True,
+                        "buyer_active": True,
+                    },
                 )
 
-                # create a message on Firestore database
-                msg_ref = (
-                    db.collection("chat")
-                    .document(doc_ref.id)
-                    .collection("message")
-                    .document()
+                # create a message
+                message = Message.objects.create(
+                    text="",
+                    sender_user_id=official_account_user,
+                    receiver_user_id=item.user,
+                    type="auctionNotSell",
+                    is_read=False,
+                    chat=chat,
                 )
 
-                # print("no bidding msg sent")
-
-                # set data for the message document
-                msg_ref.set(
-                    {
-                        "isRead": False,
-                        "receiverId": item.user_id,
-                        "receiverToken": user["fcmToken"],
-                        "text": "",
-                        "time": firestore.SERVER_TIMESTAMP,
-                        "type": "auctionNotSell",
-                        "url": "",
-                        "userId": official_account_id,
-                    }
+                push_service = FCMNotification(
+                    api_key=firebase_server_api_key,
                 )
-
-                # print("sad")
+                result = push_service.notify_single_device(
+                    registration_id=chat.seller.fcm_token,
+                    message_title="소상공간",
+                    message_body=f'"{chat.title}" 상품에 대한 경매가 완료되었지만, 입찰자가 없어요',
+                )
 
     if __name__ == "__main__":
         print(f"[{datetime.now()}] tasks start.")

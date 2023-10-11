@@ -19,6 +19,7 @@ from .views import (
     BlockUser,
     UnBlockUser,
     BlockedUserList,
+    CheckPhoneNumber,
 )
 
 urlpatterns = [
@@ -31,6 +32,7 @@ urlpatterns = [
     path("purchases/auction", UserAuctionItemPurchaseList.as_view()),
     path("fcm-token", UpdateFCMToken.as_view(), name="update_fcm_token"),
     path("nickname", UpdateNickname.as_view(), name="update_nickname"),
+    path("check-phone-number", CheckPhoneNumber.as_view(), name="check_phone_number"),
     path("check-nickname", CheckNickname.as_view(), name="check_nickcname"),
     path("logout", Logout.as_view(), name="logout"),
     path("deletion", DeleteUser.as_view(), name="delete_user"),

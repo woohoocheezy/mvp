@@ -26,21 +26,13 @@ try:
             deadline=yesterday, is_deleted=False
         )
 
-        # print(len(overdue_auction_items))
-
         for item in overdue_auction_items:
             item.is_overdue = True
             item.save()
 
-            print(item, item.biddings.all())
-
             if item.biddings.exists():
-                # print(item, "hi")
                 item.is_bidded = True
                 item.save()
-
-                # highest_bidding = item.biddings.order_by("-bidding_price").first()
-                # print(highest_bidding)
 
     if __name__ == "__main__":
         print(f"[{datetime.now()}] tasks start.")
