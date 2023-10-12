@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import ParseError, PermissionDenied
 from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
@@ -442,6 +442,8 @@ class UpdateNickname(APIView):
 
 
 class CheckPhoneNumber(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
     def get(self, request):
         phone_number = request.query_params.get("phone_number", None)
 
@@ -457,6 +459,8 @@ class CheckPhoneNumber(APIView):
 
 
 class CheckNickname(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
     def get(self, request):
         nick_name = request.query_params.get("nick_name", None)
 
