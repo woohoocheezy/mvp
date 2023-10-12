@@ -344,6 +344,7 @@ class UserInformation(APIView):
                 "profile_image_url": custom_user.profile_image_url,
                 "nick_name": custom_user.nick_name,
                 "is_certificated": custom_user.is_certificated,
+                "user_uuid": custom_user.user_uuid,
             }
             return Response(data, status=HTTP_200_OK)
         except CustomUser.DoesNotExist:
