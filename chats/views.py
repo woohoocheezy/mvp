@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 from config.settings import PAGE_SIZE
+from items.models import FixedPriceItem
 from .models import Chat, Message
 from .serializers import ChatDetailSerializer, ChatListSerializer, MessageSerializer
 
@@ -66,7 +67,7 @@ class ChatList(APIView):
             many=True,
             context={"request": request},
         )
-        print(serializer.data)
+        # print(serializer.data)
 
         return Response(serializer.data)
 
@@ -125,3 +126,28 @@ class LeaveChatRoom(APIView):
             Chat.objects.filter(chat_uuid=chat.chat_uuid).delete()
 
         return Response(status=HTTP_200_OK)
+
+
+class BuyerList(APIView):
+    def get_chats(self, request_user, item_uuid):
+        try:
+            chats = Chat.objects.filter(seller=request_user, object_id=item_uuid)
+            chats = chats.annotate(
+                last_chat_date=Coalesce(Max("messages__time_sent"), "created_at")
+            ).order_by("-last_chat_date")
+            return chats
+        except Chat.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, item_uuid):
+        request_user = request.user
+
+        chats = self.get_chats(request_user, item_uuid)
+
+        serializer = ChatListSerializer(
+            chats,
+            many=True,
+            context={"request": request},
+        )
+
+        return Response(serializer.data)
