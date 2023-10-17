@@ -340,7 +340,7 @@ class AuctionItems(APIView):
         /items/?search=value"""
 
         user = request.user
-        blocked_user_ids = user.blocked_users.all().value_list("user_uuid", flat=True)
+        blocked_user_ids = user.blocked_users.all().values_list("user_uuid", flat=True)
 
         try:
             page = int(request.query_params.get("page", 1))
