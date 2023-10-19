@@ -5,8 +5,17 @@ from rest_framework.serializers import (
 )
 from photos.serializers import PhotoSerializer
 from .models import FixedPriceItem, AuctionItem
+from datetime import date
+from biddings.models import Bidding
 from wishlists.models import Wishlist
+from chats.models import Chat
 from django.contrib.contenttypes.models import ContentType
+
+
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class FixedPriceItemListWishSerializer(ModelSerializer):
@@ -15,6 +24,7 @@ class FixedPriceItemListWishSerializer(ModelSerializer):
     photo = SerializerMethodField()
     is_liked = SerializerMethodField()
     count_liked = SerializerMethodField()
+    count_chats = SerializerMethodField()
 
     class Meta:
         model = FixedPriceItem
@@ -30,7 +40,11 @@ class FixedPriceItemListWishSerializer(ModelSerializer):
             "is_liked",
             "count_liked",
             "is_deleted",
+            "count_chats",
         )
+
+    def get_count_chats(self, item):
+        return Chat.objects.filter(object_id=item.pk).count()
 
     def get_photo(self, item):
         content_type = ContentType.objects.get_for_model(item)
@@ -59,6 +73,7 @@ class FixedPriceItemListSerializer(ModelSerializer):
     photo = SerializerMethodField()
     is_liked = SerializerMethodField()
     count_liked = SerializerMethodField()
+    count_chats = SerializerMethodField()
 
     class Meta:
         model = FixedPriceItem
@@ -75,7 +90,11 @@ class FixedPriceItemListSerializer(ModelSerializer):
             "is_deleted",
             "count_liked",
             "user_id",
+            "count_chats",
         )
+
+    def get_count_chats(self, item):
+        return Chat.objects.filter(object_id=item.pk).count()
 
     def get_photo(self, item):
         content_type = ContentType.objects.get_for_model(item)
@@ -102,6 +121,7 @@ class FixedPriceItemDetailSerializer(ModelSerializer):
     photos = SerializerMethodField()
     is_liked = SerializerMethodField()
     count_liked = SerializerMethodField()
+    count_chats = SerializerMethodField()
     user_profile = SerializerMethodField()
     user_nickname = SerializerMethodField()
 
@@ -109,6 +129,9 @@ class FixedPriceItemDetailSerializer(ModelSerializer):
         model = FixedPriceItem
 
         fields = "__all__"
+
+    def get_count_chats(self, item):
+        return Chat.objects.filter(object_id=item.pk).count()
 
     def get_is_liked(self, item):
         request = self.context["request"]
@@ -241,6 +264,7 @@ class AuctionItemDetailSerializer(ModelSerializer):
     count_bids = SerializerMethodField()
     user_profile = SerializerMethodField()
     user_nickname = SerializerMethodField()
+    is_bid_possible = SerializerMethodField()
 
     class Meta:
         model = AuctionItem
@@ -275,6 +299,19 @@ class AuctionItemDetailSerializer(ModelSerializer):
 
     def get_user_nickname(self, item):
         return item.user.nick_name
+
+    def get_is_bid_possible(self, item):
+        user = self.context["request"].user
+
+        if (item.deadline < date.today()) is True:
+            return False
+
+        if Bidding.objects.filter(
+            user_id=user.user_uuid, auction_item__pk=item.item_uuid
+        ).exists():
+            return False
+
+        return True
 
 
 class UserSoldSerializer(Serializer):
