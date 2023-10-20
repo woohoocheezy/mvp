@@ -378,7 +378,7 @@ class AuctionItems(APIView):
         all_items = (
             AuctionItem.objects.filter(query)
             .exclude(user__in=blocked_user_ids)
-            .order_by("-created_at")
+            .order_by("deadline", "-created_at")
         )[start:end]
 
         serializer = AuctionItemListSerializer(
