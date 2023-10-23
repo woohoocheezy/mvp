@@ -47,9 +47,14 @@ class EnterChat(APIView):
 class ChatList(APIView):
     def get_chats(self, user):
         try:
-            chats = Chat.objects.filter(
-                seller=user, seller_active=True
-            ) | Chat.objects.filter(buyer=user, buyer_active=True)
+            blocked_user_ids = user.blocked_users.all().values_list(
+                "user_uuid", flat=True
+            )
+            chats = Chat.objects.filter(seller=user, seller_active=True).exclude(
+                buyer__in=blocked_user_ids
+            ) | Chat.objects.filter(buyer=user, buyer_active=True).exclude(
+                seller__in=blocked_user_ids
+            )
             chats = chats.annotate(
                 last_chat_date=Coalesce(Max("messages__time_sent"), "created_at")
             ).order_by("-last_chat_date")
