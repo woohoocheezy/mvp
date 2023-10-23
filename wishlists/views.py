@@ -12,6 +12,11 @@ from .serializers import (
 from items.models import FixedPriceItem, AuctionItem
 from config.settings import PAGE_SIZE
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 class Wishlists(APIView):
     """the APIView for Item Wishlist"""
@@ -107,20 +112,35 @@ class FixedPriceItemWishlistDetail(APIView):
         pk -- the primary key or the requested wishlist
         Return: the serialized data of the wishlist with 'the pk & the user'
         """
-        # try:
-        #     page = int(request.query_params.get("page", 1))
-        # except ValueError:
-        #     page = 1
 
-        # page_size = PAGE_SIZE
-        # start = (page - 1) * page_size
-        # end = start + page_size
         wishlist = self.get_object(request)
-        print(wishlist.fixed_price_items, wishlist.auction_items)
-        serializer = FixedPriceItemWishlistSerializer(
-            wishlist, context={"request": request}
+
+        try:
+            page = int(request.query_params.get("page", 1))
+        except ValueError:
+            page = 1
+
+        page_size = PAGE_SIZE
+        start = (page - 1) * page_size
+        end = start + page_size
+
+        # blocked users
+        blocked_user_ids = request.user.blocked_users.all().values_list(
+            "user_uuid", flat=True
         )
-        # print(serializer)
+
+        wishlist_items = wishlist.fixed_price_items.all().exclude(
+            user__in=blocked_user_ids
+        )[start:end]
+
+        serializer = FixedPriceItemWishlistSerializer(
+            {
+                "wishlist_uuid": wishlist.wishlist_uuid,
+                "name": wishlist.name,
+                "fixed_price_items": wishlist_items,
+            },
+            context={"request": request},
+        )
 
         return Response(serializer.data)
 
@@ -167,6 +187,7 @@ class AuctionItemWishlistDetail(APIView):
         pk -- the primary key or the requested wishlist
         Return: the serialized data of the wishlist with 'the pk & the user'
         """
+
         wishlist = self.get_object(request)
 
         # Get teh page number from the query parameter (default to 1 if not provided)
@@ -182,8 +203,15 @@ class AuctionItemWishlistDetail(APIView):
         start = (page - 1) * page_size
         end = start + page_size
 
+        # blocked users
+        blocked_user_ids = request.user.blocked_users.all().values_list(
+            "user_uuid", flat=True
+        )
+
         # Slice the auction_items QuerySet to only include items in the current page
-        auction_items_page = wishlist.auction_items.all()[start:end]
+        auction_items_page = wishlist.auction_items.all().exclude(
+            user__in=blocked_user_ids
+        )[start:end]
 
         serializer = AuctionItemWishlistSerializer(
             {
@@ -193,7 +221,6 @@ class AuctionItemWishlistDetail(APIView):
             },
             context={"request": request},
         )
-        # print(serializer)
 
         return Response(serializer.data)
 
