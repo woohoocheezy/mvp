@@ -173,3 +173,5 @@ gunicorn.sock
 sosang.sql
 sosang_after_1.sql
 sosang_after_2.sql
+mysql-apt-config_0.8.17-1_all.deb
+gcloudignore
