@@ -156,3 +156,15 @@ class BuyerList(APIView):
         )
 
         return Response(serializer.data)
+
+
+class MessageIsRead(APIView):
+    def put(self, request, message_uuid):
+        try:
+            message = Message.objects.get(message_uuid=message_uuid)
+            message.is_read = True
+            message.save()
+        except Message.DoesNotExist:
+            raise NotFound
+
+        return Response(HTTP_200_OK)
