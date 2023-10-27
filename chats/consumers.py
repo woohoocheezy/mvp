@@ -53,6 +53,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "type": "chat_message",
                     "message": message,
                     "sender_id": user_id,
+                    "content_type": type,
                 },
             )
         except ValueError as e:
@@ -69,11 +70,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def chat_message(self, event):
         message = event["message"]
         sender_id = event["sender_id"]
+        content_type = event["content_type"]
 
         # Send message to WebSocket
         await self.send(
             text_data=dumps(
                 {
+                    "content_type": content_type,
                     "message": message,
                     "sender_id": sender_id,
                 }
