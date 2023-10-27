@@ -9,6 +9,7 @@ class UserAdmin(admin.ModelAdmin):
         "nick_name",
         "user_type",
         "name",
+        "create_at",
         "chat_notification_allowed",
         "marketing_notification_allowed",
         "is_certificated",

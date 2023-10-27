@@ -20,14 +20,12 @@ from .models import Wishlist
 class WishlistAdmin(admin.ModelAdmin):
     list_display = (
         "wishlist_uuid",
-        # "user_id",
-        "name",
+        "user",
         "created_at",
         "updated_at",
     )
     search_fields = (
         "wishlist_uuid",
-        # "user_id",
         "name",
     )
     list_per_page = 20
