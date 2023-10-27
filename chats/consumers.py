@@ -38,16 +38,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         type = text_data_json["type"]
         user_id = text_data_json["user_id"]
 
-        # logger.info(self.scope)
-        # logger.info(text_data)
-
         # Save message on the database
-
         # Get User instances for sender and reciever
         sender_user, reciever_user = await self.get_users(user_id)
-        # logger.info(f"{sender_user}, {reciever_user}")
-        # logger.info(f"{sender_user.user_uuid}, {reciever_user.user_uuid}")
-        # logger.info(sender_user, reciever_user)
 
         # Create and Store the message on DB
         try:
@@ -59,6 +52,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 {
                     "type": "chat_message",
                     "message": message,
+                    "sender_id": user_id,
                 },
             )
         except ValueError as e:
@@ -74,9 +68,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # Recieve message from room group
     async def chat_message(self, event):
         message = event["message"]
+        sender_id = event["sender_id"]
 
         # Send message to WebSocket
-        await self.send(text_data=dumps({"message": message}))
+        await self.send(
+            text_data=dumps(
+                {
+                    "message": message,
+                    "sender_id": sender_id,
+                }
+            )
+        )
 
     @database_sync_to_async
     def get_users(self, user_id):
