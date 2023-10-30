@@ -327,7 +327,8 @@ class UserCreate(APIView):
 class DeleteUser(APIView):
     def delete(self, request):
         user = request.user
-        user.delete()
+        user.is_deleted = True
+        user.save()
 
         return Response(status=HTTP_204_NO_CONTENT)
 
