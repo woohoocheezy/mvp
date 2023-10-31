@@ -2,7 +2,7 @@ from wishlists.models import Wishlist
 from photos.models import Photo
 from photos.serializers import PhotoSerializer
 from items.models import FixedPriceItem, AuctionItem
-
+from users.models import CustomUser
 from django.contrib.contenttypes.models import ContentType
 
 
@@ -96,3 +96,25 @@ def fixed_photo_test():
                 print(photo["pk"])
 
             print("----------")
+
+
+def change_owner():
+    user = CustomUser.objects.get(user_uuid="4187aa45-2567-4960-ae4b-ad75f9143d67")
+    fixed_items = FixedPriceItem.objects.filter(user=user)
+
+    temp_user = CustomUser.objects.get(user_uuid="ae0aa09f-6e5d-4893-ae04-af79bfec4af5")
+
+    for item in fixed_items:
+        item.user = temp_user
+        item.save()
+
+
+def kakao_user():
+    users = CustomUser.objects.filter(user_type="KAKAO")
+
+    count = 0
+
+    for user in users:
+        if user.phone_number == user.kakao_id:
+            user.phone_number = user.kakao_id
+            user.save()

@@ -2,11 +2,56 @@ import datetime
 import string
 import random
 import secrets
+from django.utils import timezone
 from django.contrib.auth.models import User
 from firebase_admin import firestore
 from users.models import CustomUser
 from items.models import FixedPriceItem, AuctionItem
 from wishlists.models import Wishlist
+
+
+def change_create_at():
+    user_list = ["김가나", "정태홍", "이연재"]
+
+    db = firestore.client()
+    users_ref = db.collection("user")
+    firebase_users = users_ref.get()
+
+    for idx, name in enumerate(user_list):
+        print(idx, name)
+        # user = CustomUser.objects.get(name=name)
+
+        # user.create_at =
+
+
+def change_created_at():
+    db = firestore.client()
+
+    start_date = timezone.make_aware(datetime.datetime(2023, 10, 25))
+    end_date = timezone.make_aware(datetime.datetime(2023, 10, 26))
+
+    users_ref = db.collection("user")
+    firebase_users = users_ref.get()
+    users = CustomUser.objects.filter(create_at__range=(start_date, end_date))
+
+    # print(len(users))
+    # print(firebase_users)
+
+    # for user in users:
+    #     firebase_users
+    # user.create_at = data["createDate"].strftime("%Y-%m-%dT%H:%M:%SZ")
+    # user.save()
+    # count = 0
+
+    for user in firebase_users:
+        data = user.to_dict()
+
+        # custom_user = CustomUser.
+
+        if CustomUser.objects.filter(nick_name=data["nickName"]).exists():
+            custom_user = CustomUser.objects.get(nick_name=data["nickName"])
+            custom_user.create_at = data["createDate"]
+            custom_user.save()
 
 
 def random_string_generator(length=10):

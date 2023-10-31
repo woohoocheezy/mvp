@@ -30,6 +30,7 @@ class CustomUser(models.Model):
     )  # push_notification_allowed로 이름 변경 고민해볼 것
     marketing_notification_allowed = models.BooleanField(default=True)
     is_certificated = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)
     create_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(
         auto_now=True,

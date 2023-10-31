@@ -38,20 +38,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         type = text_data_json["type"]
         user_id = text_data_json["user_id"]
 
-        # logger.info(self.scope)
-        # logger.info(text_data)
-
         # Save message on the database
-
         # Get User instances for sender and reciever
         sender_user, reciever_user = await self.get_users(user_id)
-        # logger.info(f"{sender_user}, {reciever_user}")
-        # logger.info(f"{sender_user.user_uuid}, {reciever_user.user_uuid}")
-        # logger.info(sender_user, reciever_user)
 
         # Create and Store the message on DB
         try:
-            await self.create_message(type, sender_user, reciever_user, message)
+            created_message = await self.create_message(
+                type, sender_user, reciever_user, message
+            )
 
             # Send message to room group
             await self.channel_layer.group_send(
@@ -59,6 +54,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 {
                     "type": "chat_message",
                     "message": message,
+                    "sender_id": user_id,
+                    "content_type": type,
+                    "message_uuid": str(created_message.message_uuid),
                 },
             )
         except ValueError as e:
@@ -74,9 +72,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # Recieve message from room group
     async def chat_message(self, event):
         message = event["message"]
+        sender_id = event["sender_id"]
+        content_type = event["content_type"]
+        message_uuid = event["message_uuid"]
 
         # Send message to WebSocket
-        await self.send(text_data=dumps({"message": message}))
+        await self.send(
+            text_data=dumps(
+                {
+                    "content_type": content_type,
+                    "message": message,
+                    "sender_id": sender_id,
+                    "message_uuid": message_uuid,
+                }
+            )
+        )
 
     @database_sync_to_async
     def get_users(self, user_id):
