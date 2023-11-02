@@ -59,6 +59,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "message_uuid": str(created_message.message_uuid),
                 },
             )
+            logging.info(f"Received message: {message} from user id: {user_id}")
         except ValueError as e:
             if str(e) == "The receiver has left the chat room":
                 logger.error(f"Failed to send a message: {e}")
@@ -87,6 +88,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 }
             )
         )
+        logging.info(f"Processed message: {message} from user id: {sender_id}")
 
     @database_sync_to_async
     def get_users(self, user_id):
