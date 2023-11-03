@@ -114,7 +114,6 @@ class FixedPriceItems(APIView):
         locations = request.query_params.getlist("location")
         """
 
-        """
         if search_query or categories or used_years or locations:
             from stats.models import (
                 SearchStats,
@@ -124,7 +123,7 @@ class FixedPriceItems(APIView):
             )
 
             # 1. Create the SearchStats instance and set the user_id.
-            search_stat = SearchStats(user_id=request.user["user_id"])
+            search_stat = SearchStats(user_id=request.user.user_uuid)
             search_stat.save()
 
             # 2. Handle many-to-many relationships.
@@ -147,7 +146,6 @@ class FixedPriceItems(APIView):
 
             # 3. Save the SearchStats instance.
             search_stat.save()
-        """
 
         return Response(serializer.data)
 
