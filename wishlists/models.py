@@ -27,9 +27,13 @@ class Wishlist(CommonModel):
     fixed_price_items = models.ManyToManyField(
         FixedPriceItem,
         related_name="wishlists",
+        null=True,
+        blank=True,
     )  # need to remove on the step 4 after migration
 
     auction_items = models.ManyToManyField(
         AuctionItem,
         related_name="wishlists",
+        null=True,
+        blank=True,
     )  # need to remove on the step 4 after migration

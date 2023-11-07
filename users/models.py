@@ -38,7 +38,7 @@ class CustomUser(models.Model):
     fcm_token = models.TextField(null=True, blank=True)  # null, blank 삭제 필요
     nick_name = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=13)
-    birth_date = models.DateField()
+    birth_date = models.DateField(null=True, blank=True)
     sector = models.CharField(max_length=13)
     phone_number = models.CharField(max_length=60, unique=True)
     profile_image_url = models.URLField(null=True, blank=True)
