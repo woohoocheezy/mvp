@@ -5,14 +5,14 @@ from .models import FixedPriceItem
 
 class ItemFilter(filters.FilterSet):
     category = filters.ChoiceFilter(choices=FixedPriceItem.CategoryChoices.choices)
-    used_years = filters.ChoiceFilter(choices=FixedPriceItem.UsedYearChoices.choices)
+    # used_years = filters.ChoiceFilter(choices=FixedPriceItem.UsedYearChoices.choices)
     price = filters.RangeFilter()
     location = filters.ChoiceFilter(choices=FixedPriceItem.LocationChoices.choices)
     search = filters.CharFilter(method="search_item")
 
     class Meta:
         model = FixedPriceItem
-        fields = ["category", "used_years", "price", "location", "search"]
+        fields = ["category", "price", "location", "search"]
 
 
 def search_item(self, queryset, name, value):

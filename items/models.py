@@ -68,6 +68,24 @@ class BaseItem(CommonModel):
         JUNGGU = ("중구", "중구")
         JUNGRYANG = ("중량구", "중량구")
 
+        SEJONG = ("세종시", "세종시")
+        INCHEON = ("인천시", "인천시")
+        DAEJEON = ("대전시", "대전시")
+        GWANGJU = ("광주시", "광주시")
+        DAEGU = ("대구시", "대구시")
+        ULSAN = ("울산시", "울산시")
+        BUSAN = ("부산시", "부산시")
+
+        GYEONGGI = ("경기도", "경기도")
+        GANGWON = ("강원도", "강원도")
+        CHUNGCHEONGBUK = ("충청북도", "충청북도")
+        CHUNGCHEONGNAM = ("충청남도", "충청남도")
+        JEOLLABUK = ("전라북도", "전라북도")
+        JEOLLANAM = ("전라남도", "전라남도")
+        GYEONGSANGBUK = ("경상북도", "경상북도")
+        GYEONGSANGNAM = ("경상남도", "경상남도")
+        JEJU = ("제주도", "제주도")
+
     item_uuid = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -97,16 +115,6 @@ class BaseItem(CommonModel):
 
     is_deleted = models.BooleanField(default=False)
 
-    # used years
-    used_years = models.CharField(
-        max_length=20,
-        choices=UsedYearChoices.choices,
-    )
-
-    # manufactured date
-    manufactured_date = models.DateField(null=True, blank=True)
-    is_manufactured = models.BooleanField(default=True)
-
     # the period of use
     used_period = models.IntegerField(default=0)
 
@@ -127,10 +135,6 @@ class BaseItem(CommonModel):
 class FixedPriceItem(BaseItem):
     # price
     price = models.PositiveIntegerField()
-    # negotiable
-    is_negotiable = models.BooleanField(
-        default=False,
-    )
 
     def __str__(self):
         return self.item_name

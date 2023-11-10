@@ -32,7 +32,6 @@ class FixedPriceItemListWishSerializer(ModelSerializer):
         fields = (
             "item_name",
             "photo",
-            "is_negotiable",
             "is_sold",
             "price",
             "location",
@@ -81,7 +80,6 @@ class FixedPriceItemListSerializer(ModelSerializer):
         fields = (
             "item_name",
             "photo",
-            "is_negotiable",
             "is_sold",
             "price",
             "location",
