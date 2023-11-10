@@ -32,6 +32,11 @@ from .serializers import (
 )
 from .filters import ItemFilter
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 class FixedPriceItems(APIView):
     # permission_classes = [IsAuthenticatedOrReadOnly]
@@ -70,7 +75,7 @@ class FixedPriceItems(APIView):
 
         search_query = request.query_params.get("search", "")
         categories = request.query_params.getlist("category")
-        used_years = request.query_params.getlist("used_years")
+        used_periods = request.query_params.getlist("used_period")
         min_price = request.query_params.get("min_price")
         max_price = request.query_params.get("max_price")
         locations = request.query_params.getlist("location")
@@ -83,8 +88,45 @@ class FixedPriceItems(APIView):
             )
         if categories:
             query &= Q(category__in=categories)
-        if used_years:
-            query &= Q(used_years__in=used_years)
+
+        used_periods_queries = Q()
+        if used_periods:
+            for used_period in used_periods:
+                # if used_period == "1년 이하":
+                #     query &= Q(used_period__lt=100)
+
+                # elif used_period == "1년~2년":
+                #     query &= Q(used_period__gte=100)
+                #     query &= Q(used_period__lt=200)
+
+                # elif used_period == "2년~3년":
+                #     query &= Q(used_period__gte=200)
+                #     query &= Q(used_period__lt=300)
+
+                # elif used_period == "3년~4년":
+                #     query &= Q(used_period__gte=300)
+                #     query &= Q(used_period__lt=400)
+
+                # elif used_period == "4년~5년":
+                #     query &= Q(used_period__gte=400)
+                #     query &= Q(used_period__lt=500)
+                # elif used_period == "5년 이상":
+                #     query &= Q(used_period__gte=500)
+                if used_period == "1년 이하":
+                    used_periods_queries |= Q(used_period__lt=100)
+                elif used_period == "1년~2년":
+                    used_periods_queries |= Q(used_period__gte=100, used_period__lt=200)
+                elif used_period == "2년~3년":
+                    used_periods_queries |= Q(used_period__gte=200, used_period__lt=300)
+                elif used_period == "3년~4년":
+                    used_periods_queries |= Q(used_period__gte=300, used_period__lt=400)
+                elif used_period == "4년~5년":
+                    used_periods_queries |= Q(used_period__gte=400, used_period__lt=500)
+                elif used_period == "5년 이상":
+                    used_periods_queries |= Q(used_period__gte=500)
+
+        query &= used_periods_queries
+
         if min_price:
             query &= Q(price__gte=min_price)
         if max_price:

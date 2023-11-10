@@ -107,6 +107,9 @@ class BaseItem(CommonModel):
     manufactured_date = models.DateField(null=True, blank=True)
     is_manufactured = models.BooleanField(default=True)
 
+    # the period of use
+    used_period = models.IntegerField(default=0)
+
     # description
     description = models.TextField()
 

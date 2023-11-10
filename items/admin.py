@@ -38,6 +38,7 @@ class FixedPriceItemAdmin(admin.ModelAdmin):
         "price",
         "is_negotiable",
         "created_at",
+        "used_period",
     )
 
 
