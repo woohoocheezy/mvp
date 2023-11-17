@@ -75,7 +75,7 @@ class GetUploadURL(APIView):
             s3.upload_fileobj(
                 uploaded_file,
                 settings.AWS_STORAGE_BUCKET_NAME,
-                uploaded_file.name,
+                file_name,
                 ExtraArgs={"ContentType": uploaded_file.content_type},
             )
 
@@ -86,4 +86,4 @@ class GetUploadURL(APIView):
             f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/{file_name}"
         )
 
-        return Response({"uploaded_url": uploaded_url}, status=200)
+        return Response({"upload_url": uploaded_url}, status=200)
