@@ -129,8 +129,10 @@ class FixedPriceItemWishlistDetail(APIView):
             "user_uuid", flat=True
         )
 
-        wishlist_items = wishlist.fixed_price_items.all().exclude(
-            user__in=blocked_user_ids
+        wishlist_items = (
+            wishlist.fixed_price_items.all()
+            .exclude(user__in=blocked_user_ids)
+            .order_by("is_sold", "-created_at")
         )[start:end]
 
         serializer = FixedPriceItemWishlistSerializer(

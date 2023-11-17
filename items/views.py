@@ -32,6 +32,14 @@ from .serializers import (
 )
 from .filters import ItemFilter
 
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+handler = logging.FileHandler("config/server.log")
+handler.setLevel(logging.ERROR)
+logger.addHandler(handler)
+
 
 class FixedPriceItems(APIView):
     # permission_classes = [IsAuthenticatedOrReadOnly]
@@ -70,7 +78,7 @@ class FixedPriceItems(APIView):
 
         search_query = request.query_params.get("search", "")
         categories = request.query_params.getlist("category")
-        used_years = request.query_params.getlist("used_years")
+        used_periods = request.query_params.getlist("used_period")
         min_price = request.query_params.get("min_price")
         max_price = request.query_params.get("max_price")
         locations = request.query_params.getlist("location")
@@ -83,8 +91,45 @@ class FixedPriceItems(APIView):
             )
         if categories:
             query &= Q(category__in=categories)
-        if used_years:
-            query &= Q(used_years__in=used_years)
+
+        used_periods_queries = Q()
+        if used_periods:
+            for used_period in used_periods:
+                # if used_period == "1년 이하":
+                #     query &= Q(used_period__lt=100)
+
+                # elif used_period == "1년~2년":
+                #     query &= Q(used_period__gte=100)
+                #     query &= Q(used_period__lt=200)
+
+                # elif used_period == "2년~3년":
+                #     query &= Q(used_period__gte=200)
+                #     query &= Q(used_period__lt=300)
+
+                # elif used_period == "3년~4년":
+                #     query &= Q(used_period__gte=300)
+                #     query &= Q(used_period__lt=400)
+
+                # elif used_period == "4년~5년":
+                #     query &= Q(used_period__gte=400)
+                #     query &= Q(used_period__lt=500)
+                # elif used_period == "5년 이상":
+                #     query &= Q(used_period__gte=500)
+                if used_period == "1년 이하":
+                    used_periods_queries |= Q(used_period__lt=100)
+                elif used_period == "1년~2년":
+                    used_periods_queries |= Q(used_period__gte=100, used_period__lt=200)
+                elif used_period == "2년~3년":
+                    used_periods_queries |= Q(used_period__gte=200, used_period__lt=300)
+                elif used_period == "3년~4년":
+                    used_periods_queries |= Q(used_period__gte=300, used_period__lt=400)
+                elif used_period == "4년~5년":
+                    used_periods_queries |= Q(used_period__gte=400, used_period__lt=500)
+                elif used_period == "5년 이상":
+                    used_periods_queries |= Q(used_period__gte=500)
+
+        query &= used_periods_queries
+
         if min_price:
             query &= Q(price__gte=min_price)
         if max_price:
@@ -96,7 +141,7 @@ class FixedPriceItems(APIView):
         all_items = (
             FixedPriceItem.objects.filter(query)
             .exclude(user__in=blocked_user_ids)
-            .order_by("-created_at")
+            .order_by("is_sold", "-created_at")
         )[start:end]
 
         serializer = FixedPriceItemListSerializer(
@@ -114,6 +159,7 @@ class FixedPriceItems(APIView):
         locations = request.query_params.getlist("location")
         """
 
+        """
         if search_query or categories or used_years or locations:
             from stats.models import (
                 SearchStats,
@@ -123,7 +169,7 @@ class FixedPriceItems(APIView):
             )
 
             # 1. Create the SearchStats instance and set the user_id.
-            search_stat = SearchStats(user_id=request.user.user_uuid)
+            search_stat = SearchStats(user_id=request.user["user_id"])
             search_stat.save()
 
             # 2. Handle many-to-many relationships.
@@ -146,43 +192,55 @@ class FixedPriceItems(APIView):
 
             # 3. Save the SearchStats instance.
             search_stat.save()
+        """
 
         return Response(serializer.data)
 
     def post(self, request):
-        request.data["user"] = request.user.user_uuid
-        serializer = FixedPriceItemDetailSerializer(
-            data=request.data,
-            context={"request": request},
-        )
+        try:
+            request.data["user"] = request.user.user_uuid
+            serializer = FixedPriceItemDetailSerializer(
+                data=request.data,
+                context={"request": request},
+            )
 
-        if serializer.is_valid():
-            with transaction.atomic():
-                item = serializer.save(user=request.user)
+            if serializer.is_valid():
+                with transaction.atomic():
+                    item = serializer.save(user=request.user)
 
-                photo_count = 0
-                for photo_file in request.data.get("photos"):
-                    serializer = PhotoSerializer(data=photo_file)
+                    photo_count = 0
+                    for photo_file in request.data.get("photos"):
+                        serializer = PhotoSerializer(data=photo_file)
 
-                    if serializer.is_valid():
-                        photo = serializer.save(item=item)
-                        if photo_count == 0:
-                            photo.is_thumbnail = True
-                            photo.save()
-                            photo_count += 1
-                        serializer = PhotoSerializer(photo)
+                        if serializer.is_valid():
+                            photo = serializer.save(item=item)
+                            if photo_count == 0:
+                                photo.is_thumbnail = True
+                                photo.save()
+                                photo_count += 1
+                            serializer = PhotoSerializer(photo)
 
-                    else:
-                        return Response(serializer.errors)
+                        else:
+                            logger.error("PhotoSerializer is invalid.")
+                            logger.error(request.data)
+                            logger.error(serializer.errors)
+                            return Response(serializer.errors, status=400)
 
-                return Response(
-                    FixedPriceItemDetailSerializer(
-                        item,
-                        context={"request": request},
-                    ).data
-                )
-        else:
-            return Response(serializer.errors)
+                    return Response(
+                        FixedPriceItemDetailSerializer(
+                            item,
+                            context={"request": request},
+                        ).data
+                    )
+            else:
+                logger.error("FixedPriceItemDetailSerializer is invalid.")
+                logger.error(request.data)
+                logger.error(serializer.errors)
+                return Response(serializer.errors, status=400)
+        except Exception as e:
+            logger.error("Error occurred: %s" % str(e))
+            logger.error(request.data)
+            return Response({"error": "An unexpected error occurred."}, status=500)
 
 
 class FixedPriceItemDetail(APIView):

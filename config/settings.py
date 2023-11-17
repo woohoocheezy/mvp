@@ -203,6 +203,12 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"  # SMTP 서버 주소
+EMAIL_PORT = 587  # SMTP 서버 포트
+EMAIL_USE_TLS = True  # TLS 사용 여부
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")  # 이메일 주소
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")  # 이메일 비밀번호
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

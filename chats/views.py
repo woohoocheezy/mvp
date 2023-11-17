@@ -72,7 +72,7 @@ class ChatList(APIView):
             many=True,
             context={"request": request},
         )
-        # print(serializer.data)
+        print(serializer.data)
 
         return Response(serializer.data)
 
