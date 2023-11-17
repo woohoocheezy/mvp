@@ -34,8 +34,11 @@ from .filters import ItemFilter
 
 import logging
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+handler = logging.FileHandler("config/server.log")
+handler.setLevel(logging.ERROR)
+logger.addHandler(handler)
 
 
 class FixedPriceItems(APIView):
@@ -138,7 +141,7 @@ class FixedPriceItems(APIView):
         all_items = (
             FixedPriceItem.objects.filter(query)
             .exclude(user__in=blocked_user_ids)
-            .order_by("-created_at")
+            .order_by("is_sold","-created_at")
         )[start:end]
 
         serializer = FixedPriceItemListSerializer(
@@ -194,39 +197,50 @@ class FixedPriceItems(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        request.data["user"] = request.user.user_uuid
-        serializer = FixedPriceItemDetailSerializer(
-            data=request.data,
-            context={"request": request},
-        )
+        try:
+            request.data["user"] = request.user.user_uuid
+            serializer = FixedPriceItemDetailSerializer(
+                data=request.data,
+                context={"request": request},
+            )
 
-        if serializer.is_valid():
-            with transaction.atomic():
-                item = serializer.save(user=request.user)
+            if serializer.is_valid():
+                with transaction.atomic():
+                    item = serializer.save(user=request.user)
 
-                photo_count = 0
-                for photo_file in request.data.get("photos"):
-                    serializer = PhotoSerializer(data=photo_file)
+                    photo_count = 0
+                    for photo_file in request.data.get("photos"):
+                        serializer = PhotoSerializer(data=photo_file)
 
-                    if serializer.is_valid():
-                        photo = serializer.save(item=item)
-                        if photo_count == 0:
-                            photo.is_thumbnail = True
-                            photo.save()
-                            photo_count += 1
-                        serializer = PhotoSerializer(photo)
+                        if serializer.is_valid():
+                            photo = serializer.save(item=item)
+                            if photo_count == 0:
+                                photo.is_thumbnail = True
+                                photo.save()
+                                photo_count += 1
+                            serializer = PhotoSerializer(photo)
 
-                    else:
-                        return Response(serializer.errors)
+                        else:
+                            logger.error("PhotoSerializer is invalid.")
+                            logger.error(request.data)
+                            logger.error(serializer.errors)
+                            return Response(serializer.errors, status=400)
 
-                return Response(
-                    FixedPriceItemDetailSerializer(
-                        item,
-                        context={"request": request},
-                    ).data
-                )
-        else:
-            return Response(serializer.errors)
+                    return Response(
+                        FixedPriceItemDetailSerializer(
+                            item,
+                            context={"request": request},
+                        ).data
+                    )
+            else:
+                logger.error("FixedPriceItemDetailSerializer is invalid.")
+                logger.error(request.data)
+                logger.error(serializer.errors)
+                return Response(serializer.errors, status=400)
+        except Exception as e:
+            logger.error("Error occurred: %s" % str(e))
+            logger.error(request.data)
+            return Response({"error": "An unexpected error occurred."}, status=500)
 
 
 class FixedPriceItemDetail(APIView):

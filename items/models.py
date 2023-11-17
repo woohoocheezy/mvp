@@ -66,7 +66,7 @@ class BaseItem(CommonModel):
         EUNPYEONG = ("은평구", "은평구")
         JONGRO = ("종로구", "종로구")
         JUNGGU = ("중구", "중구")
-        JUNGRYANG = ("중량구", "중량구")
+        JUNGRYANG = ("중랑구", "중랑구")
 
         SEJONG = ("세종시", "세종시")
         INCHEON = ("인천시", "인천시")
