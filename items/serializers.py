@@ -141,7 +141,8 @@ class FixedPriceItemDetailSerializer(ModelSerializer):
     def get_photos(self, item):
         content_type = ContentType.objects.get_for_model(item)
         photos_queryset = content_type.photos.filter(object_id=item.pk).order_by(
-            "-is_thumbnail"
+            "-is_thumbnail",
+            "created_at",
         )
         photo_serializer = PhotoSerializer(photos_queryset, many=True)
 

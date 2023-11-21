@@ -14,6 +14,8 @@ from rest_framework.status import (
 )
 import json, requests, random, uuid
 from urllib.parse import urlparse
+from botocore.exceptions import NoCredentialsError
+import boto3
 from config.settings import PAGE_SIZE, BUSINESS_SERVICE_KEY
 from items.models import FixedPriceItem, AuctionItem
 from items.serializers import (
@@ -397,22 +399,30 @@ class PushNotification(APIView):
 class UpdateProfile(APIView):
     def post(self, request):
         user = request.user
-        # print(user, user.user_uuid)
         image_url = request.query_params.get("profile_image_url", None)
 
-        # if not image_url:
-        #     return Response({"error": "이미지 주소는 필수임"}, status=HTTP_400_BAD_REQUEST)
+        if (user.profile_image_url is None) or (user.profile_image_url == ""):
+            user.profile_image_url = image_url
+            user.save()
 
-        if user.profile_image_url:
-            url = user.profile_image_url
-            parsed_url = urlparse(url)
-            image_id = parsed_url.path.strip("/").split("/")[-2]
+            return Response(status=HTTP_200_OK)
 
-            # Call cloudflare API for getting the upload URL
-            url = f"https://api.cloudflare.com/client/v4/accounts/{settings.CF_ID}/images/v1/{image_id}"
-            url_request = requests.delete(
-                url, headers={"Authorization": f"Bearer {settings.CF_TOKEN}"}
-            )
+        s3 = boto3.resource(
+            "s3",
+            aws_access_key_id=settings.AWS_ACCESS_KEY,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        )
+
+        parsed_url = urlparse(user.profile_image_url)
+        bucket_name = parsed_url.netloc.split(".")[0]
+        file_name = parsed_url.path[1:]
+
+        # logger.info(f"{bucket_name}, {file_name}")
+
+        try:
+            s3.Object(bucket_name, file_name).delete()
+        except NoCredentialsError:
+            return Response({"error": "Credentials not available"}, status=400)
 
         user.profile_image_url = image_url
         user.save()

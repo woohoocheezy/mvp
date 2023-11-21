@@ -3,6 +3,8 @@ from django.core.mail import EmailMessage
 from django.http import HttpResponse
 from users.models import CustomUser
 import csv
+from django.utils import timezone
+import pytz
 
 
 class Command(BaseCommand):
@@ -27,9 +29,15 @@ class Command(BaseCommand):
         ]
         writer.writerow(fields)
         queryset = CustomUser.objects.all().order_by("create_at")
+        seoul_tz = pytz.timezone("Asia/Seoul")  # 서울 시간대
         for user in queryset:
-            row = writer.writerow([getattr(user, field) for field in fields])
-
+            create_at_seoul = user.create_at.astimezone(seoul_tz)
+            row = writer.writerow(
+                [
+                    getattr(user, field) if field != "create_at" else create_at_seoul
+                    for field in fields
+                ]
+            )
         # 파일로 저장
         with open("users.csv", "w", newline="") as f:
             f.write(response.content.decode())

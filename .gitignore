@@ -177,3 +177,4 @@ mysql-apt-config_0.8.17-1_all.deb
 gcloudignore
 users.csv
 migration_script/
+users/management/commands/send_email.py

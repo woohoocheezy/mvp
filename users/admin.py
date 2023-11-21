@@ -2,6 +2,8 @@ from django.contrib import admin
 from .models import CustomUser
 import csv
 from django.http import HttpResponse
+from django.utils import timezone
+import pytz
 
 
 def export_to_csv(modeladmin, request, queryset):
@@ -23,8 +25,15 @@ def export_to_csv(modeladmin, request, queryset):
     ]
     writer.writerow(fields)
     queryset = queryset.order_by("create_at")
+    seoul_tz = pytz.timezone("Asia/Seoul")  # 서울 시간대
     for user in queryset:
-        row = writer.writerow([getattr(user, field) for field in fields])
+        create_at_seoul = user.create_at.astimezone(seoul_tz)
+        row = writer.writerow(
+            [
+                getattr(user, field) if field != "create_at" else create_at_seoul
+                for field in fields
+            ]
+        )
     return response
 
 
