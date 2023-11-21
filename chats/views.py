@@ -63,9 +63,18 @@ class ChatList(APIView):
             raise NotFound
 
     def get(self, request):
+        try:
+            page = int(request.query_params.get("page", 1))
+        except ValueError:
+            page = 1
+
+        page_size = PAGE_SIZE
+        start = (page - 1) * page_size
+        end = start + page_size
+
         user = request.user
 
-        chats = self.get_chats(user)
+        chats = self.get_chats(user)[start:end]
 
         serializer = ChatListSerializer(
             chats,
@@ -145,9 +154,18 @@ class BuyerList(APIView):
             raise NotFound
 
     def get(self, request, item_uuid):
+        try:
+            page = int(request.query_params.get("page", 1))
+        except ValueError:
+            page = 1
+
+        page_size = PAGE_SIZE
+        start = (page - 1) * page_size
+        end = start + page_size
+
         request_user = request.user
 
-        chats = self.get_chats(request_user, item_uuid)
+        chats = self.get_chats(request_user, item_uuid)[start:end]
 
         serializer = ChatListSerializer(
             chats,
