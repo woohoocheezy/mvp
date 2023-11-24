@@ -526,9 +526,9 @@ class CheckKakaoID(APIView):
             return Response({"error": "kakao_id는 필수임"}, status=HTTP_400_BAD_REQUEST)
 
         if CustomUser.objects.filter(kakao_id=kakao_id).exists():
-            return Response({"exists": "True"}, status=HTTP_200_OK)
+            return Response({"exists": True}, status=HTTP_200_OK)
         else:
-            return Response({"exists": "False"}, status=HTTP_200_OK)
+            return Response({"exists": False}, status=HTTP_200_OK)
 
 
 class CheckNickname(APIView):
