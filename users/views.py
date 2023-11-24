@@ -251,8 +251,6 @@ class UserSoldList(APIView):
             "user_uuid", flat=True
         )
 
-        print(blocked_user_ids)
-
         queryset = list(
             FixedPriceItem.objects.filter(
                 user=request.user, is_sold=True, is_deleted=False
@@ -484,6 +482,23 @@ class UpdateNickname(APIView):
         return Response(status=HTTP_200_OK)
 
 
+class UpdatePhoneNumber(APIView):
+    def put(self, request):
+        user = request.user
+        new_phone_number = request.data.get("phone_number", None)
+
+        if not new_phone_number:
+            return Response({"error": "phone_number는 필수임"}, status=HTTP_400_BAD_REQUEST)
+
+        try:
+            user.phone_number = new_phone_number
+            user.save()
+        except IntegrityError:
+            return Response({"error": "phone_number이 중복됨"}, status=HTTP_400_BAD_REQUEST)
+
+        return Response(status=HTTP_200_OK)
+
+
 class CheckPhoneNumber(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -499,6 +514,21 @@ class CheckPhoneNumber(APIView):
             return Response(
                 {"error": "일치하는 phone_number가 존재하지 않음"}, status=HTTP_400_BAD_REQUEST
             )
+
+
+class CheckKakaoID(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request):
+        kakao_id = request.query_params.get("kakao_id", None)
+
+        if not kakao_id:
+            return Response({"error": "kakao_id는 필수임"}, status=HTTP_400_BAD_REQUEST)
+
+        if CustomUser.objects.filter(kakao_id=kakao_id).exists():
+            return Response({"exists": "True"}, status=HTTP_200_OK)
+        else:
+            return Response({"exists": "False"}, status=HTTP_200_OK)
 
 
 class CheckNickname(APIView):

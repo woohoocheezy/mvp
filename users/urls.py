@@ -20,6 +20,8 @@ from .views import (
     UnBlockUser,
     BlockedUserList,
     CheckPhoneNumber,
+    CheckKakaoID,
+    UpdatePhoneNumber,
 )
 
 urlpatterns = [
@@ -43,4 +45,6 @@ urlpatterns = [
     path("<uuid:pk>/block", BlockUser.as_view(), name="block_user"),
     path("<uuid:pk>/unblock", UnBlockUser.as_view(), name="unblock_user"),
     path("blocked", BlockedUserList.as_view(), name="blocked_user_list"),
+    path("check-kakao-id", CheckKakaoID.as_view(), name="check_kakao_id"),
+    path("phone-number", UpdatePhoneNumber.as_view(), name="update phone_number"),
 ]
