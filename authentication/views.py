@@ -45,6 +45,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # save the valid user
         self.user = user
+        self.user.is_deleted = False
+        self.user.save()
 
         # print(phone_number)
         # print(self.user.name)

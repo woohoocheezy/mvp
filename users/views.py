@@ -401,31 +401,6 @@ class PushNotification(APIView):
 
 class UpdateProfile(APIView):
     def post(self, request):
-        """
-        user = request.user
-        # print(user, user.user_uuid)
-        image_url = request.query_params.get("profile_image_url", None)
-
-        # if not image_url:
-        #     return Response({"error": "이미지 주소는 필수임"}, status=HTTP_400_BAD_REQUEST)
-
-        if user.profile_image_url:
-            url = user.profile_image_url
-            parsed_url = urlparse(url)
-            image_id = parsed_url.path.strip("/").split("/")[-2]
-
-            # Call cloudflare API for getting the upload URL
-            url = f"https://api.cloudflare.com/client/v4/accounts/{settings.CF_ID}/images/v1/{image_id}"
-            url_request = requests.delete(
-                url, headers={"Authorization": f"Bearer {settings.CF_TOKEN}"}
-            )
-
-        user.profile_image_url = image_url
-        user.save()
-
-        return Response(status=HTTP_200_OK)
-        """
-
         user = request.user
         image_url = request.query_params.get("profile_image_url", None)
 

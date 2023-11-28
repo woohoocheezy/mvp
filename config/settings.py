@@ -51,7 +51,6 @@ CUSTOM_APPS = [
     "users.apps.UsersConfig",
     "biddings.apps.BiddingsConfig",
     "django_celery_results",
-    "push_notification",
     "chats.apps.ChatsConfig",
 ]
 

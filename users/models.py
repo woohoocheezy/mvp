@@ -49,6 +49,7 @@ class CustomUser(models.Model):
     )
     kakao_id = models.CharField(max_length=100, null=True, blank=True)
     apple_id = models.CharField(max_length=100, null=True, blank=True)
+    gender = models.CharField(max_length=15, null=True, blank=True)
 
     groups = models.ManyToManyField(
         "auth.Group",

@@ -13,6 +13,7 @@ class UserAdmin(admin.ModelAdmin):
         "marketing_notification_allowed",
         "is_certificated",
         "fcm_token",
+        "gender",
     )
     list_filter = (
         "user_type",
