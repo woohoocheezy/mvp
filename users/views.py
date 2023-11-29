@@ -519,8 +519,19 @@ class UnBlockUser(APIView):
         return Response(status=HTTP_204_NO_CONTENT)
 
 
-class BlockedUserList(ListAPIView):
-    serializer_class = BlockedUserSerailizer
+class BlockedUserList(APIView):
+    def get(self, request):
+        try:
+            page = int(request.query_params.get("page", 1))
+        except ValueError:
+            page = 1
 
-    def get_queryset(self):
-        return self.request.user.blocked_users.all()
+        page_size = PAGE_SIZE
+        start = (page - 1) * page_size
+        end = start + page_size
+
+        blocked_users = self.request.user.blocked_users.all()[start:end]
+
+        serializer = BlockedUserSerailizer(blocked_users, many=True)
+
+        return Response(serializer.data)
