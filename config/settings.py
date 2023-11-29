@@ -46,7 +46,6 @@ CUSTOM_APPS = [
     "photos.apps.PhotosConfig",
     "items.apps.ItemsConfig",
     "wishlists.apps.WishlistsConfig",
-    "stats.apps.StatsConfig",
     "authentication.apps.AuthenticationConfig",
     "users.apps.UsersConfig",
     "biddings.apps.BiddingsConfig",
