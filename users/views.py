@@ -266,46 +266,8 @@ class UserSoldList(APIView):
         return Response(serializer.data)
 
 
-# class Users(APIView):
-
-#     """APIView for creating a user
-#     ex) 'POST /uesrs' request handler
-#     """
-
-#     def post(self, request):
-#         """POST /users' handler to create a user
-
-#         Keyword arguments:
-#         request -- the request from user
-#         Return: the created user
-#         """
-
-#         # phone_number validation
-#         phone_number = request.data.get("phone_number")
-#         if not phone_number:
-#             raise ParseError
-
-#         serializer = PrivateUserSerializer(data=request.data)
-
-#         if serializer.is_valid():
-#             user = serializer.save()
-#             user.set_password(password)
-#             user.save()
-
-#             serializer = PrivateUserSerializer(user)
-
-#             return Response(serializer.data)
-
-#         else:
-#             return Response(serializer.errors)
-
-
 class UserCreate(APIView):
     def post(self, request):
-        # phone_number = request.data.get("phone_number")
-        # if not phone_number:
-        #     raise ParseError
-
         serializer = CustomUserSerializer(data=request.data)
         if serializer.is_valid():
             random_username = uuid.uuid4().hex[:10]

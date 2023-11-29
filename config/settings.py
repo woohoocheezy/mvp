@@ -50,8 +50,6 @@ CUSTOM_APPS = [
     "authentication.apps.AuthenticationConfig",
     "users.apps.UsersConfig",
     "biddings.apps.BiddingsConfig",
-    "django_celery_results",
-    "push_notification",
     "chats.apps.ChatsConfig",
 ]
 
@@ -233,10 +231,6 @@ PAGE_SIZE = 20
 
 # BUSSINESS_SERVICE_KEY
 BUSINESS_SERVICE_KEY = os.getenv("BUSINESS_SERVICE_KEY")
-
-# celery settings
-CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_RESULT_BACKEND = "django-db"
 
 # Custom User Model
 AUTH_USER_MODEL = "auth.User"
