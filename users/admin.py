@@ -53,6 +53,7 @@ class UserAdmin(admin.ModelAdmin):
         "is_certificated",
         "fcm_token",
         "is_deleted",
+        "gender",
     )
     list_filter = (
         "user_type",
